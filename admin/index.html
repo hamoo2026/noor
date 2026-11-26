@@ -203,7 +203,7 @@ const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&
 const nf=n=>new Intl.NumberFormat("en-US").format(n);
 const fdt=d=>d?new Date(d).toLocaleString("ar-EG-u-nu-latn",{dateStyle:"medium",timeStyle:"short"}):"-";
 const ago=d=>{if(!d)return"-";const s=(Date.now()-new Date(d))/1000;if(s<90)return"الآن";if(s<3600)return"قبل "+nf(Math.round(s/60))+" دقيقة";if(s<86400)return"قبل "+nf(Math.round(s/3600))+" ساعة";return"قبل "+nf(Math.round(s/86400))+" يوم"};
-const state=d=>{const m=Date.now()-new Date(d);return m<20*6e4?"on":m<864e5?"d1":m<7*864e5?"d7":"off"};
+const state=(d,c)=>{const m=Date.now()-new Date(d);return m<((c>=35?6:20)*6e4)?"on":m<864e5?"d1":m<7*864e5?"d7":"off"};
 const stLbl={on:"أونلاين",d1:"نشط اليوم",d7:"نشط هذا الأسبوع",off:"غير نشط"};
 function toast(t){const e=$("#toast");e.textContent=t;e.classList.remove("hidden");clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.add("hidden"),3200)}
 
@@ -223,8 +223,8 @@ if(DEMO){
   const cnt=(k)=>{const m={};devs.forEach(d=>m[d[k]||"?"]=(m[d[k]||"?"]||0)+1);return Object.entries(m).sort((a,b)=>b[1]-a[1]).map(([v,n])=>({v,n}))};
   api={user:"demo@noor.app",
    async stats(){const per=[];for(let k=29;k>=0;k--){const d=new Date(now-k*864e5).toISOString().slice(0,10);per.push({d,n:devs.filter(x=>x.first_seen.slice(0,10)===d).length})}
-    return{total:devs.length,online:devs.filter(d=>state(d.last_seen)==="on").length,d1:devs.filter(d=>["on","d1"].includes(state(d.last_seen))).length,d7:devs.filter(d=>state(d.last_seen)!=="off").length,new_today:devs.filter(d=>now-new Date(d.first_seen)<864e5).length,new_7d:devs.filter(d=>now-new Date(d.first_seen)<7*864e5).length,errors_7d:errRows.length,per_day:per,versions:cnt("version_name").map(x=>({v:x.v,n:x.n})),androids:cnt("android"),models:cnt("model").slice(0,8),langs:cnt("lang")}},
-   async devices({q,version,status,sort,asc,page,size}){let a=devs.filter(d=>(!q||(d.model+d.install_id).toLowerCase().includes(q.toLowerCase()))&&(!version||d.version_name===version)&&(!status||(status==="on"?state(d.last_seen)==="on":status==="d1"?["on","d1"].includes(state(d.last_seen)):status==="d7"?state(d.last_seen)!=="off":state(d.last_seen)==="off")));
+    return{total:devs.length,online:devs.filter(d=>state(d.last_seen,d.version_code)==="on").length,d1:devs.filter(d=>["on","d1"].includes(state(d.last_seen,d.version_code))).length,d7:devs.filter(d=>state(d.last_seen,d.version_code)!=="off").length,new_today:devs.filter(d=>now-new Date(d.first_seen)<864e5).length,new_7d:devs.filter(d=>now-new Date(d.first_seen)<7*864e5).length,errors_7d:errRows.length,per_day:per,versions:cnt("version_name").map(x=>({v:x.v,n:x.n})),androids:cnt("android"),models:cnt("model").slice(0,8),langs:cnt("lang")}},
+   async devices({q,version,status,sort,asc,page,size}){let a=devs.filter(d=>(!q||(d.model+d.install_id).toLowerCase().includes(q.toLowerCase()))&&(!version||d.version_name===version)&&(!status||(status==="on"?state(d.last_seen,d.version_code)==="on":status==="d1"?["on","d1"].includes(state(d.last_seen,d.version_code)):status==="d7"?state(d.last_seen,d.version_code)!=="off":state(d.last_seen,d.version_code)==="off")));
     a.sort((x,y)=>(x[sort]>y[sort]?1:-1)*(asc?1:-1));return{rows:a.slice(page*size,page*size+size),total:a.length}},
    async config(){return{...cfg}},async saveConfig(c){cfg={...cfg,...c};return null},
    async messages(){return msgs.slice()},async addMessage(m){msgs.unshift({id:Date.now(),created_at:new Date().toISOString(),active:true,...m});return null},
@@ -240,7 +240,7 @@ if(DEMO){
    async stats(){return ck(await sb.rpc("noor_admin_stats"))},
    async devices({q,version,status,sort,asc,page,size}){let x=sb.from("noor_installs").select("install_id,first_seen,last_seen,version_name,version_code,android,model,lang",{count:"exact"});
     if(q)x=x.or(`model.ilike.%${q.replace(/[%,()]/g,"")}%,install_id.ilike.%${q.replace(/[^0-9a-f-]/gi,"")}%`);if(version)x=x.eq("version_name",version);
-    const t=Date.now();if(status==="on")x=x.gt("last_seen",new Date(t-20*6e4).toISOString());else if(status==="d1")x=x.gt("last_seen",new Date(t-864e5).toISOString());else if(status==="d7")x=x.gt("last_seen",new Date(t-7*864e5).toISOString());else if(status==="off")x=x.lte("last_seen",new Date(t-7*864e5).toISOString());
+    const t=Date.now();if(status==="on")x=x.or(`and(version_code.gte.35,last_seen.gt.${new Date(t-6*6e4).toISOString()}),and(version_code.lt.35,last_seen.gt.${new Date(t-20*6e4).toISOString()})`);else if(status==="d1")x=x.gt("last_seen",new Date(t-864e5).toISOString());else if(status==="d7")x=x.gt("last_seen",new Date(t-7*864e5).toISOString());else if(status==="off")x=x.lte("last_seen",new Date(t-7*864e5).toISOString());
     const r=await x.order(sort,{ascending:asc}).range(page*size,page*size+size-1);if(r.error)throw r.error;return{rows:r.data,total:r.count||0}},
    async config(){return ck(await sb.from("noor_config").select("*").eq("id",1).single())},
    async saveConfig(c){return (await sb.from("noor_config").update({...c,updated_at:new Date().toISOString()}).eq("id",1)).error},
@@ -301,12 +301,12 @@ async function overview0(){const v=$("#view");v.innerHTML=`<div class="grid kpis
  const pct=s.total?Math.round(s.d7/s.total*100):0;
  if(!s.total){v.innerHTML=`<div class="card empty"><div class="e">☪</div><h3>لا توجد أجهزة بعد</h3><p>ستظهر الإحصاءات هنا بعد أن يفتح أول جهاز نسخة 0.10.0 أو أحدث.</p></div>`;return}
  v.innerHTML=`<div class="grid kpis">
- ${K('<span class="dot"></span>أونلاين الآن',nf(s.online),"آخر 20 دقيقة","hl")}${K("نشط خلال 24 ساعة",nf(s.d1),`${s.total?Math.round(s.d1/s.total*100):0}% من الأجهزة`)}${K("نشط خلال 7 أيام",nf(s.d7),pct+"% من الأجهزة")}
+ ${K('<span class="dot"></span>أونلاين الآن',nf(s.online),"التطبيق مفتوح الآن (نبضة كل 4 دقائق)","hl")}${K("نشط خلال 24 ساعة",nf(s.d1),`${s.total?Math.round(s.d1/s.total*100):0}% من الأجهزة`)}${K("نشط خلال 7 أيام",nf(s.d7),pct+"% من الأجهزة")}
  ${K("إجمالي الأجهزة",nf(s.total),"كل التثبيتات المسجلة")}${K("تثبيتات جديدة اليوم",nf(s.new_today),`${nf(s.new_7d)} خلال 7 أيام`)}${K("أخطاء آخر 7 أيام",nf(s.errors_7d),s.errors_7d?"راجع تبويب الأخطاء":"لا توجد أخطاء",s.errors_7d?"":"")}</div>
  <div class="grid g2" style="margin-top:14px"><div class="card"><h3>تثبيتات جديدة يوميًا</h3><div class="sub">آخر 30 يومًا (أول ظهور للجهاز)</div>${areaChart(s.per_day)}</div>
  <div class="card"><h3>توزيع الإصدارات</h3><div class="sub">نسبة الأجهزة على كل إصدار</div>${donut(s.versions,s.total)}</div></div>
  <div class="grid g3" style="margin-top:14px"><div class="card"><h3>أندرويد</h3><div class="sub">إصدارات النظام</div>${bars(s.androids,s.total)}</div><div class="card"><h3>أكثر الأجهزة</h3><div class="sub">موديل الموبايل</div>${bars(s.models,s.total)}</div><div class="card"><h3>اللغة</h3><div class="sub">لغة النظام على الجهاز</div>${bars(s.langs,s.total)}</div></div>
- <p class="hint" style="margin-top:14px">الأرقام تقريبية: كل جهاز يرسل نبضة عند فتح التطبيق وكل 12 ساعة تقريبًا، فحالة «أونلاين» تعني فتح التطبيق مؤخرًا. الإحصاء مجهول بالكامل.</p>`}
+ <p class="hint" style="margin-top:14px">«أونلاين» = التطبيق مفتوح على الشاشة الآن: نسخة 0.10.2 فأحدث ترسل نبضة كل 4 دقائق وهو مفتوح، وتُحسب أونلاين إذا كانت آخر نبضة قبل أقل من 6 دقائق. النسخ الأقدم لا ترسل نبضة أثناء الاستخدام، فتُحسب أونلاين 20 دقيقة فقط بعد فتحها. «غير نشط» = لم يظهر منذ أكثر من 7 أيام. الإحصاء مجهول بالكامل.</p>`}
 
 const D={q:"",version:"",status:"",sort:"last_seen",asc:false,page:0,size:25};
 async function devices(){const v=$("#view");const st=await api.stats().catch(()=>null);const vs=(st?.versions||[]).map(x=>x.v);
@@ -319,7 +319,7 @@ async function devices(){const v=$("#view");const st=await api.stats().catch(()=
   window.__rows=r.rows;
   if(!r.rows.length){t.innerHTML='<div class="empty"><div class="e">⌕</div>لا توجد أجهزة مطابقة</div>';return}
   const th=(k,l)=>`<th data-s="${k}">${l}${D.sort===k?(D.asc?" ▲":" ▼"):""}</th>`;
-  t.innerHTML=`<div class="tw cards"><table><thead><tr>${th("model","الجهاز")}${th("version_name","الإصدار")}${th("android","أندرويد")}${th("last_seen","آخر ظهور")}${th("first_seen","أول ظهور")}<th>الحالة</th></tr></thead><tbody>${r.rows.map(d=>{const s=state(d.last_seen);return`<tr data-i="${esc(d.install_id)}" tabindex="0" role="button" aria-label="تفاصيل ${esc(d.model||"")}"><td data-l="الجهاز"><span style="text-align:end"><b>${esc(d.model||"?")}</b><br><bdi class="mono" style="color:var(--mut)">${esc(d.install_id.slice(0,8))}</bdi></span></td><td data-l="الإصدار"><bdi class="mono">${esc(d.version_name)}</bdi></td><td data-l="أندرويد">${esc(d.android||"?")}</td><td data-l="آخر ظهور">${ago(d.last_seen)}</td><td data-l="أول ظهور">${fdt(d.first_seen)}</td><td data-l="الحالة"><span class="pill ${s}">${s==="on"?'<span class="dot" style="margin:0"></span>':""}${stLbl[s]}</span></td></tr>`}).join("")}</tbody></table></div>
+  t.innerHTML=`<div class="tw cards"><table><thead><tr>${th("model","الجهاز")}${th("version_name","الإصدار")}${th("android","أندرويد")}${th("last_seen","آخر ظهور")}${th("first_seen","أول ظهور")}<th>الحالة</th></tr></thead><tbody>${r.rows.map(d=>{const s=state(d.last_seen,d.version_code);return`<tr data-i="${esc(d.install_id)}" tabindex="0" role="button" aria-label="تفاصيل ${esc(d.model||"")}"><td data-l="الجهاز"><span style="text-align:end"><b>${esc(d.model||"?")}</b><br><bdi class="mono" style="color:var(--mut)">${esc(d.install_id.slice(0,8))}</bdi></span></td><td data-l="الإصدار"><bdi class="mono">${esc(d.version_name)}</bdi></td><td data-l="أندرويد">${esc(d.android||"?")}</td><td data-l="آخر ظهور">${ago(d.last_seen)}<br><span class="hint" style="margin:0">${fdt(d.last_seen)}</span></td><td data-l="أول ظهور">${fdt(d.first_seen)}</td><td data-l="الحالة"><span class="pill ${s}" title="${s==="on"?"التطبيق مفتوح الآن":"آخر ظهور "+fdt(d.last_seen)}">${s==="on"?'<span class="dot" style="margin:0"></span>':""}${stLbl[s]}</span></td></tr>`}).join("")}</tbody></table></div>
   <div class="pager"><span>${nf(D.page*D.size+1)}-${nf(Math.min(r.total,(D.page+1)*D.size))} من ${nf(r.total)}</span><span><button class="btn ghost sm" id="pp" ${D.page?"":"disabled"}>السابق</button> <button class="btn ghost sm" id="pn" ${(D.page+1)*D.size>=r.total?"disabled":""}>التالي</button></span></div>`;
   t.querySelectorAll("th[data-s]").forEach(h=>h.onclick=()=>{const k=h.dataset.s;D.asc=D.sort===k?!D.asc:false;D.sort=k;D.page=0;load()});
   const pp=$("#pp"),pn=$("#pn");pp.onclick=()=>{D.page--;load()};pn.onclick=()=>{D.page++;load()}}
@@ -409,7 +409,7 @@ function decorateOverview(){const s=window.__stats;if(!s||!s.per_day)return;cons
 function tip(t,e){const b=$("#ttip");b.textContent=t;b.style.left=Math.min(innerWidth-130,e.clientX+12)+"px";b.style.top=(e.clientY-36)+"px";b.classList.add("on")}
 /* drawer */
 function closeDrawer(){$("#drawer").classList.remove("on");$("#scrim").classList.remove("on");setTimeout(()=>{$("#scrim").classList.add("hidden")},220);window.__ret?.focus?.()}
-async function openDrawer(id){const d=(window.__rows||[]).find(x=>x.install_id===id);if(!d)return;window.__ret=document.activeElement;const st=state(d.last_seen);
+async function openDrawer(id){const d=(window.__rows||[]).find(x=>x.install_id===id);if(!d)return;window.__ret=document.activeElement;const st=state(d.last_seen,d.version_code);
  $("#scrim").classList.remove("hidden");requestAnimationFrame(()=>{$("#scrim").classList.add("on");$("#drawer").classList.add("on")});
  $("#drawer").innerHTML=`<header><h2><bdi dir="ltr">${esc(d.model||"?")}</bdi></h2><button class="iconbtn" id="dx" aria-label="إغلاق">✕</button></header><div class="body">
  <p><span class="pill ${st}">${st==="on"?'<span class="dot" style="margin:0"></span>':""}${stLbl[st]}</span></p>
