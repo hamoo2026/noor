@@ -171,6 +171,9 @@ bdi,.mono{unicode-bidi:isolate}
 }
 html.still *,html.still *::before,html.still *::after{animation:none!important;transition:none!important}html.still .spark path.l{stroke-dashoffset:0}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}.spark path.l{stroke-dashoffset:0}}
+@font-face{font-family:"Twemoji Country Flags";unicode-range:U+1F1E6-1F1FF,U+1F3F4,U+E0062-E007F;src:url("https://cdn.jsdelivr.net/npm/country-flag-emoji-polyfill@0.1.8/dist/TwemojiCountryFlags.woff2") format("woff2");font-display:swap}
+.flag{font-family:"Twemoji Country Flags","Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",sans-serif;font-size:17px;line-height:1;margin-inline-end:6px;vertical-align:-2px}
+.cc{font-size:11px;color:var(--mut);direction:ltr;unicode-bidi:isolate;margin-inline-start:6px;border:1px solid var(--line);border-radius:5px;padding:0 4px}
 </style></head><body>
 <div id="demoBar" class="demo hidden">وضع العرض التجريبي: بيانات وهمية محلية، لا يتم الاتصال بقاعدة البيانات ولا الكتابة فيها</div>
 
@@ -204,6 +207,9 @@ const nf=n=>new Intl.NumberFormat("en-US").format(n);
 const fdt=d=>d?new Date(d).toLocaleString("ar-EG-u-nu-latn",{dateStyle:"medium",timeStyle:"short"}):"-";
 const ago=d=>{if(!d)return"-";const s=(Date.now()-new Date(d))/1000;if(s<90)return"الآن";if(s<3600)return"قبل "+nf(Math.round(s/60))+" دقيقة";if(s<86400)return"قبل "+nf(Math.round(s/3600))+" ساعة";return"قبل "+nf(Math.round(s/86400))+" يوم"};
 const state=(d,c)=>{const m=Date.now()-new Date(d);return m<((c>=35?6:20)*6e4)?"on":m<864e5?"d1":m<7*864e5?"d7":"off"};
+const cname=cc=>{try{return new Intl.DisplayNames(["ar"],{type:"region"}).of(cc)||cc}catch{return cc}};
+const flag=cc=>/^[A-Z]{2}$/.test(cc||"")?`<span class="flag" role="img" aria-label="${esc(cname(cc))}" title="${esc(cname(cc))}">${String.fromCodePoint(...[...cc].map(c=>127397+c.charCodeAt(0)))}</span>`:"";
+const ccTag=cc=>/^[A-Z]{2}$/.test(cc||"")?`<span class="cc" title="${esc(cname(cc))}">${cc}</span>`:"";
 const stLbl={on:"أونلاين",d1:"نشط اليوم",d7:"نشط هذا الأسبوع",off:"غير نشط"};
 function toast(t){const e=$("#toast");e.textContent=t;e.classList.remove("hidden");clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.add("hidden"),3200)}
 
@@ -215,7 +221,7 @@ if(DEMO){
   const vers=[["0.10.0",33,.5],["0.9.11",32,.28],["0.9.10",31,.12],["0.9.9",30,.1]];
   const devs=Array.from({length:137},(_,i)=>{const r=rnd();let acc=0,v=vers[0];for(const x of vers){acc+=x[2];if(r<acc){v=x;break}}
     const first=now-Math.floor(rnd()*rnd()*40)*864e5-rnd()*864e5;const seen=rnd()<.12?now-R(1,15)*6e4:rnd()<.5?now-R(1,23)*36e5:now-R(1,12)*864e5;
-    return{install_id:crypto.randomUUID(),first_seen:new Date(first).toISOString(),last_seen:new Date(Math.max(seen,first)).toISOString(),version_name:v[0],version_code:v[1],android:String([14,13,12,11][R(0,4)]),model:models[R(0,8)],lang:rnd()<.9?"ar":"en"}});
+    return{install_id:crypto.randomUUID(),first_seen:new Date(first).toISOString(),last_seen:new Date(Math.max(seen,first)).toISOString(),version_name:v[0],version_code:v[1],android:String([14,13,12,11][R(0,4)]),model:models[R(0,8)],lang:rnd()<.9?"ar":"en",country:["EG","EG","EG","SA","AE","KW","US","DE"][R(0,8)]}});
   const errs=[["java.lang.NullPointerException: Attempt to invoke virtual method on a null object","0.10.0"],["android.app.ForegroundServiceStartNotAllowedException","0.9.11"],["java.lang.IllegalStateException: Room cannot verify the data integrity","0.9.10"],["java.lang.OutOfMemoryError: Failed to allocate 4194312 bytes","0.9.11"]];
   let errRows=Array.from({length:9},(_,i)=>({id:i+1,created_at:new Date(now-R(1,60)*36e5).toISOString(),version_name:errs[i%4][1],model:models[R(0,8)],android:"14",summary:errs[i%4][0],trace:errs[i%4][0]+"\n\tat com.noorapp.noor.core.notify.SoundService.play(SoundService.kt:212)\n\tat com.noorapp.noor.core.notify.Receivers.onReceive(Receivers.kt:58)\n\tat android.app.ActivityThread.handleReceiver(ActivityThread.java:4403)"}));
   let cfg={latest_code:33,latest_name:"0.10.0",min_code:30,apk_url:"https://github.com/hamoo2026/noor/releases/download/v0.10.0/noor-0.10.0.apk",apk_sha256:"",note_ar:"تحسينات في المواعيد وإصلاح عرض الأذكار.",note_en:"Timing improvements and azkar layout fix."};
@@ -238,7 +244,7 @@ if(DEMO){
   const ck=r=>{if(r.error)throw r.error;return r.data};
   api={user:"",
    async stats(){return ck(await sb.rpc("noor_admin_stats"))},
-   async devices({q,version,status,sort,asc,page,size}){let x=sb.from("noor_installs").select("install_id,first_seen,last_seen,version_name,version_code,android,model,lang",{count:"exact"});
+   async devices({q,version,status,sort,asc,page,size}){let x=sb.from("noor_installs").select("install_id,first_seen,last_seen,version_name,version_code,android,model,lang,country",{count:"exact"});
     if(q)x=x.or(`model.ilike.%${q.replace(/[%,()]/g,"")}%,install_id.ilike.%${q.replace(/[^0-9a-f-]/gi,"")}%`);if(version)x=x.eq("version_name",version);
     const t=Date.now();if(status==="on")x=x.or(`and(version_code.gte.35,last_seen.gt.${new Date(t-6*6e4).toISOString()}),and(version_code.lt.35,last_seen.gt.${new Date(t-20*6e4).toISOString()})`);else if(status==="d1")x=x.gt("last_seen",new Date(t-864e5).toISOString());else if(status==="d7")x=x.gt("last_seen",new Date(t-7*864e5).toISOString());else if(status==="off")x=x.lte("last_seen",new Date(t-7*864e5).toISOString());
     const r=await x.order(sort,{ascending:asc}).range(page*size,page*size+size-1);if(r.error)throw r.error;return{rows:r.data,total:r.count||0}},
@@ -319,7 +325,7 @@ async function devices(){const v=$("#view");const st=await api.stats().catch(()=
   window.__rows=r.rows;
   if(!r.rows.length){t.innerHTML='<div class="empty"><div class="e">⌕</div>لا توجد أجهزة مطابقة</div>';return}
   const th=(k,l)=>`<th data-s="${k}">${l}${D.sort===k?(D.asc?" ▲":" ▼"):""}</th>`;
-  t.innerHTML=`<div class="tw cards"><table><thead><tr>${th("model","الجهاز")}${th("version_name","الإصدار")}${th("android","أندرويد")}${th("last_seen","آخر ظهور")}${th("first_seen","أول ظهور")}<th>الحالة</th></tr></thead><tbody>${r.rows.map(d=>{const s=state(d.last_seen,d.version_code);return`<tr data-i="${esc(d.install_id)}" tabindex="0" role="button" aria-label="تفاصيل ${esc(d.model||"")}"><td data-l="الجهاز"><span style="text-align:end"><b>${esc(d.model||"?")}</b><br><bdi class="mono" style="color:var(--mut)">${esc(d.install_id.slice(0,8))}</bdi></span></td><td data-l="الإصدار"><bdi class="mono">${esc(d.version_name)}</bdi></td><td data-l="أندرويد">${esc(d.android||"?")}</td><td data-l="آخر ظهور">${ago(d.last_seen)}<br><span class="hint" style="margin:0">${fdt(d.last_seen)}</span></td><td data-l="أول ظهور">${fdt(d.first_seen)}</td><td data-l="الحالة"><span class="pill ${s}" title="${s==="on"?"التطبيق مفتوح الآن":"آخر ظهور "+fdt(d.last_seen)}">${s==="on"?'<span class="dot" style="margin:0"></span>':""}${stLbl[s]}</span></td></tr>`}).join("")}</tbody></table></div>
+  t.innerHTML=`<div class="tw cards"><table><thead><tr>${th("model","الجهاز")}${th("version_name","الإصدار")}${th("android","أندرويد")}${th("last_seen","آخر ظهور")}${th("first_seen","أول ظهور")}<th>الحالة</th></tr></thead><tbody>${r.rows.map(d=>{const s=state(d.last_seen,d.version_code);return`<tr data-i="${esc(d.install_id)}" tabindex="0" role="button" aria-label="تفاصيل ${esc(d.model||"")}"><td data-l="الجهاز"><span style="text-align:end">${flag(d.country)}<b>${esc(d.model||"?")}</b>${ccTag(d.country)}<br><bdi class="mono" style="color:var(--mut)">${esc(d.install_id.slice(0,8))}</bdi></span></td><td data-l="الإصدار"><bdi class="mono">${esc(d.version_name)}</bdi></td><td data-l="أندرويد">${esc(d.android||"?")}</td><td data-l="آخر ظهور">${ago(d.last_seen)}<br><span class="hint" style="margin:0">${fdt(d.last_seen)}</span></td><td data-l="أول ظهور">${fdt(d.first_seen)}</td><td data-l="الحالة"><span class="pill ${s}" title="${s==="on"?"التطبيق مفتوح الآن":"آخر ظهور "+fdt(d.last_seen)}">${s==="on"?'<span class="dot" style="margin:0"></span>':""}${stLbl[s]}</span></td></tr>`}).join("")}</tbody></table></div>
   <div class="pager"><span>${nf(D.page*D.size+1)}-${nf(Math.min(r.total,(D.page+1)*D.size))} من ${nf(r.total)}</span><span><button class="btn ghost sm" id="pp" ${D.page?"":"disabled"}>السابق</button> <button class="btn ghost sm" id="pn" ${(D.page+1)*D.size>=r.total?"disabled":""}>التالي</button></span></div>`;
   t.querySelectorAll("th[data-s]").forEach(h=>h.onclick=()=>{const k=h.dataset.s;D.asc=D.sort===k?!D.asc:false;D.sort=k;D.page=0;load()});
   const pp=$("#pp"),pn=$("#pn");pp.onclick=()=>{D.page--;load()};pn.onclick=()=>{D.page++;load()}}
@@ -411,9 +417,9 @@ function tip(t,e){const b=$("#ttip");b.textContent=t;b.style.left=Math.min(inner
 function closeDrawer(){$("#drawer").classList.remove("on");$("#scrim").classList.remove("on");setTimeout(()=>{$("#scrim").classList.add("hidden")},220);window.__ret?.focus?.()}
 async function openDrawer(id){const d=(window.__rows||[]).find(x=>x.install_id===id);if(!d)return;window.__ret=document.activeElement;const st=state(d.last_seen,d.version_code);
  $("#scrim").classList.remove("hidden");requestAnimationFrame(()=>{$("#scrim").classList.add("on");$("#drawer").classList.add("on")});
- $("#drawer").innerHTML=`<header><h2><bdi dir="ltr">${esc(d.model||"?")}</bdi></h2><button class="iconbtn" id="dx" aria-label="إغلاق">✕</button></header><div class="body">
+ $("#drawer").innerHTML=`<header><h2>${flag(d.country)}<bdi dir="ltr">${esc(d.model||"?")}</bdi></h2><button class="iconbtn" id="dx" aria-label="إغلاق">✕</button></header><div class="body">
  <p><span class="pill ${st}">${st==="on"?'<span class="dot" style="margin:0"></span>':""}${stLbl[st]}</span></p>
- <dl class="kv"><dt>الإصدار</dt><dd><bdi class="mono">${esc(d.version_name)} (${esc(d.version_code)})</bdi></dd><dt>أندرويد</dt><dd><bdi>${esc(d.android||"?")}</bdi></dd><dt>اللغة</dt><dd>${esc(d.lang==="ar"?"العربية":d.lang==="en"?"English":d.lang||"?")}</dd>
+ <dl class="kv"><dt>الإصدار</dt><dd><bdi class="mono">${esc(d.version_name)} (${esc(d.version_code)})</bdi></dd><dt>أندرويد</dt><dd><bdi>${esc(d.android||"?")}</bdi></dd><dt>الدولة</dt><dd>${d.country?flag(d.country)+esc(cname(d.country))+ccTag(d.country):"غير معروفة بعد"}</dd><dt>اللغة</dt><dd>${esc(d.lang==="ar"?"العربية":d.lang==="en"?"English":d.lang||"?")}</dd>
  <dt>أول ظهور</dt><dd>${fdt(d.first_seen)}</dd><dt>آخر ظهور</dt><dd>${fdt(d.last_seen)} <span class="hint">(${ago(d.last_seen)})</span></dd>
  <dt>رقم الجهاز</dt><dd><bdi class="mono">${esc(d.install_id)}</bdi> <button class="btn ghost sm" id="cp" type="button">نسخ</button></dd></dl>
  <h3 style="margin:22px 0 8px;font-size:var(--t3);color:var(--gold2)">أخطاء هذا الجهاز</h3><div id="de">${skel(2)}</div></div>`;
@@ -425,7 +431,7 @@ document.addEventListener("keydown",e=>{if((e.key==="Enter"||e.key===" ")&&e.tar
 $("#scrim").onclick=closeDrawer;
 /* csv */
 async function exportCsv(){try{const r=await api.devices({...D,page:0,size:1000});const q=v=>'"'+String(v??"").replace(/"/g,'""').replace(/^([=+\-@])/,"'$1")+'"';
- const rows=[["install_id","model","version_name","version_code","android","lang","first_seen","last_seen"],...r.rows.map(d=>[d.install_id,d.model,d.version_name,d.version_code,d.android,d.lang,d.first_seen,d.last_seen])];
+ const rows=[["install_id","model","country","version_name","version_code","android","lang","first_seen","last_seen"],...r.rows.map(d=>[d.install_id,d.model,d.country,d.version_name,d.version_code,d.android,d.lang,d.first_seen,d.last_seen])];
  const blob=new Blob(["\ufeff"+rows.map(a=>a.map(q).join(",")).join("\r\n")],{type:"text/csv;charset=utf-8"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="noor-devices-"+new Date().toISOString().slice(0,10)+".csv";a.click();setTimeout(()=>URL.revokeObjectURL(a.href),4000);toast("تم تصدير "+nf(r.rows.length)+" جهاز"+(r.total>r.rows.length?" من "+nf(r.total):""))}catch(e){toast("فشل التصدير: "+(e.message||e))}}
 /* command palette */
 function closeCmd(){$("#cmd").classList.add("hidden")}
