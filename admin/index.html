@@ -254,6 +254,23 @@ if(DEMO){
    async signOut(){await sb.auth.signOut();boot()}};
 }
 
+async function apkInfo(buf){const dv=new DataView(buf),u8=new Uint8Array(buf);let e=-1;for(let i=buf.byteLength-22;i>=Math.max(0,buf.byteLength-70000);i--)if(dv.getUint32(i,true)===0x06054b50){e=i;break}
+ if(e<0)throw 0;let n=dv.getUint16(e+10,true),p=dv.getUint32(e+16,true);
+ for(let k=0;k<n;k++){const m=dv.getUint16(p+10,true),cs=dv.getUint32(p+20,true),nl=dv.getUint16(p+28,true),xl=dv.getUint16(p+30,true),cl=dv.getUint16(p+32,true),lo=dv.getUint32(p+42,true);
+  const name=new TextDecoder().decode(u8.subarray(p+46,p+46+nl));
+  if(name==="AndroidManifest.xml"){const lnl=dv.getUint16(lo+26,true),lxl=dv.getUint16(lo+28,true),st=lo+30+lnl+lxl;let d=u8.subarray(st,st+cs);
+   if(m===8){d=new Uint8Array(await new Response(new Blob([d]).stream().pipeThrough(new DecompressionStream("deflate-raw"))).arrayBuffer())}
+   return axml(d)}
+  p+=46+nl+xl+cl}throw 0}
+function axml(u){const v=new DataView(u.buffer,u.byteOffset,u.byteLength);let o=8;let strs=[];let res={};
+ while(o<u.length){const t=v.getUint16(o,true),hs=v.getUint16(o+2,true),sz=v.getUint32(o+4,true);
+  if(t===0x0001){const cnt=v.getUint32(o+8,true),fl=v.getUint32(o+16,true),sb=v.getUint32(o+20,true),utf8=fl&256;
+   for(let i=0;i<cnt;i++){let q=o+sb+v.getUint32(o+hs+i*4,true);if(utf8){let l=u[q++];if(l&128)q++;let b=u[q++];if(b&128)b=((b&127)<<8)|u[q++];strs.push(new TextDecoder().decode(u.subarray(q,q+b)))}else{let l=v.getUint16(q,true);q+=2;strs.push(new TextDecoder("utf-16le").decode(u.subarray(q,q+l*2)))}}}
+  else if(t===0x0102){const ns=v.getUint32(o+16,true),nm=v.getUint32(o+20,true),ac=v.getUint16(o+28,true);if(strs[nm]==="manifest"){let a=o+36;for(let i=0;i<ac;i++,a+=20){const an=strs[v.getUint32(a+4,true)],rs=v.getUint32(a+8,true),ty=u[a+15],dt=v.getUint32(a+16,true);
+     if(an==="versionCode")res.code=dt;else if(an==="versionName")res.name=rs!==0xffffffff?strs[rs]:"";else if(an==="package")res.pkg=strs[rs]}return res}}
+  o+=sz}return res}
+
+
 /* ---------- charts ---------- */
 function areaChart(data){const W=640,H=200,p={l:30,r:8,t:12,b:24};const max=Math.max(3,...data.map(d=>d.n));const x=i=>p.l+i*(W-p.l-p.r)/Math.max(1,data.length-1),y=v=>p.t+(1-v/max)*(H-p.t-p.b);
  const pts=data.map((d,i)=>[x(i),y(d.n)]);const line=pts.map((q,i)=>(i?"L":"M")+q[0].toFixed(1)+" "+q[1].toFixed(1)).join(" ");
@@ -314,7 +331,7 @@ async function update(){const v=$("#view");v.innerHTML=`<div class="card">${skel
  v.innerHTML=`<div class="grid gs"><div class="card"><h3>إصدار التحديث</h3><div class="sub">يظهر للمستخدمين الذين إصدارهم أقدم. يفتح زر «تحميل» الرابط في المتصفح.</div>
  <div class="row2"><div><label>رقم الإصدار الأحدث (versionCode)</label><input id="lc" type="number" min="0" class="ltr" value="${esc(c.latest_code)}"></div><div><label>اسم الإصدار</label><input id="ln" class="ltr" placeholder="0.10.1" value="${esc(c.latest_name||"")}"></div></div>
  <label>رفع ملف الـ APK</label>
- <div id="drop" class="item" style="border-style:dashed;text-align:center;cursor:pointer;padding:18px"><input id="apkf" type="file" accept=".apk,application/vnd.android.package-archive" class="hidden"><div id="dtxt">اضغط لاختيار ملف APK (حتى 50 ميجا)<div class="hint">يتم حساب SHA-256 تلقائيًا ثم الرفع وملء الرابط</div></div></div>
+ <div id="drop" class="item" style="border-style:dashed;text-align:center;cursor:pointer;padding:18px"><input id="apkf" type="file" accept=".apk,application/vnd.android.package-archive" class="hidden"><div id="dtxt">اضغط لاختيار ملف APK (حتى 50 ميجا)<div class="hint">يقرأ رقم الإصدار واسمه من الملف، ويحسب SHA-256، ثم يرفع ويملأ الرابط</div></div></div>
  <label>رابط ملف الـ APK (https فقط)</label><input id="url" class="ltr" placeholder="https://github.com/.../noor.apk" value="${esc(c.apk_url||"")}">
  <label>بصمة SHA-256 (اختياري)</label><input id="sha" class="ltr" value="${esc(c.apk_sha256||"")}">
  <div class="row2"><div><label>ملاحظة بالعربي</label><textarea id="na">${esc(c.note_ar||"")}</textarea></div><div><label>Note in English</label><textarea id="ne" class="ltr">${esc(c.note_en||"")}</textarea></div></div>
@@ -331,14 +348,17 @@ async function update(){const v=$("#view");v.innerHTML=`<div class="card">${skel
  $("#drop").onclick=()=>$("#apkf").click();
  $("#apkf").onchange=async e=>{const f=e.target.files[0];if(!f)return;const er=$("#cerr");er.classList.add("hidden");
   if(!/\.apk$/i.test(f.name)||f.size>50*1048576||f.size<100000){er.textContent="الملف لازم يكون APK بحجم صحيح (أقل من 50 ميجا)";er.classList.remove("hidden");return}
-  const ver=($("#ln").value||"").trim().replace(/[^0-9A-Za-z._-]/g,"");if(!ver){er.textContent="اكتب اسم الإصدار أولًا";er.classList.remove("hidden");return}
+  let info;try{info=await apkInfo(await f.arrayBuffer())}catch(x){info=null}
+  if(!info||!info.code||info.pkg!=="com.noorapp.noor"){er.textContent="تعذّر قراءة الملف أو أنه ليس تطبيق نور";er.classList.remove("hidden");return}
+  $("#lc").value=info.code;$("#ln").value=info.name||"";if((+$("#mc").value||0)>0)$("#mc").value=info.code;setKind();
+  const ver=String(info.name||info.code).replace(/[^0-9A-Za-z._-]/g,"");
   $("#dtxt").innerHTML='<div class="sk" style="height:12px;margin:6px auto;width:60%"></div>جارٍ حساب البصمة والرفع...';
   try{const buf=await f.arrayBuffer();const h=[...new Uint8Array(await crypto.subtle.digest("SHA-256",buf))].map(b=>b.toString(16).padStart(2,"0")).join("");
    const r=await api.uploadApk(f,"noor-"+ver+".apk");if(r.error)throw r.error;$("#sha").value=h;$("#url").value=r.url;
    $("#dtxt").innerHTML='<b style="color:var(--ok)">تم الرفع</b><div class="hint">'+esc(f.name)+" · "+(f.size/1048576).toFixed(1)+" ميجا · SHA-256 "+h.slice(0,12)+"...</div>";toast("تم رفع الملف. اضغط حفظ ونشر لإظهار التحديث للمستخدمين")}
   catch(x){$("#dtxt").textContent="اضغط لاختيار ملف APK";er.textContent="فشل الرفع: "+(x.message||x);er.classList.remove("hidden")}};
  $("#sv").onclick=async()=>{const u=$("#url").value.trim(),sh=$("#sha").value.trim(),er=$("#cerr");er.classList.add("hidden");
-  const bad=(u&&!/^https:\/\//.test(u))?"الرابط لازم يبدأ بـ https://":(sh&&!/^[0-9a-fA-F]{64}$/.test(sh))?"بصمة SHA-256 لازم تكون 64 حرفًا":(+$("#lc").value>0&&!u)?"أدخل رابط الـ APK":"";
+  const bad=(u&&!/^https:\/\//.test(u))?"الرابط لازم يبدأ بـ https://":(sh&&!/^[0-9a-fA-F]{64}$/.test(sh))?"بصمة SHA-256 لازم تكون 64 حرفًا":(u&&!(+$("#lc").value>0))?"رقم الإصدار (versionCode) لازم يكون أكبر من صفر، وإلا لن يظهر التحديث. ارفع الـ APK ليتعبّى تلقائيًا":(+$("#lc").value>0&&!u)?"أدخل رابط الـ APK":"";
   if(bad){er.textContent=bad;er.classList.remove("hidden");return}
   if((+$("#mc").value||0)>0&&!confirm("هذا تحديث إجباري ولن يستطيع المستخدمون المتأخرون إغلاقه. متأكد؟"))return;
   $("#sv").disabled=true;const e=await api.saveConfig({latest_code:+$("#lc").value||0,latest_name:$("#ln").value.trim(),min_code:+$("#mc").value||0,apk_url:u||null,apk_sha256:sh||null,note_ar:$("#na").value,note_en:$("#ne").value});$("#sv").disabled=false;
