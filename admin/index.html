@@ -1,62 +1,295 @@
 <!doctype html>
-<html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<html lang="ar" dir="rtl"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow"><meta name="theme-color" content="#0a1411">
 <title>نور | لوحة المطور</title>
-<meta name="robots" content="noindex,nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=Amiri:wght@700&display=swap" rel="stylesheet">
 <style>
-body{font-family:system-ui,sans-serif;background:#0f1a17;color:#f3ead2;margin:0;padding:16px;max-width:900px;margin-inline:auto}
-h1,h2{color:#d6b96a;margin:.4em 0}.card{background:#16251f;border:1px solid #3b4a3f;border-radius:14px;padding:14px;margin:12px 0}
-input,textarea,select,button{font:inherit;padding:9px;border-radius:9px;border:1px solid #3b4a3f;background:#0f1a17;color:#f3ead2;width:100%;box-sizing:border-box;margin:4px 0}
-button{background:#d6b96a;color:#10201b;border:0;font-weight:700;cursor:pointer}.row{display:flex;gap:10px;flex-wrap:wrap}.row>div{flex:1;min-width:120px}
-.big{font-size:34px;color:#d6b96a;font-weight:800}.muted{color:#a9b3a6;font-size:13px}table{width:100%;border-collapse:collapse;font-size:13px}td,th{padding:5px;border-bottom:1px solid #2b3a30;text-align:start;vertical-align:top}
-pre{white-space:pre-wrap;direction:ltr;text-align:left;max-height:160px;overflow:auto;font-size:11px}
-.bar{background:#d6b96a;height:10px;border-radius:5px;display:inline-block}
+:root{--bg:#0a1411;--bg2:#0f1d18;--card:#12221c;--card2:#162a23;--line:#254036;--gold:#d8bb6c;--gold2:#f0dc9c;--txt:#f3ecd8;--mut:#9fb0a5;--ok:#5fd39a;--warn:#f0b35a;--bad:#ef6f6f;--blue:#6fb4e8;--r:18px}
+*{box-sizing:border-box}html{-webkit-text-size-adjust:100%}
+body{margin:0;font-family:Tajawal,system-ui,sans-serif;background:radial-gradient(1200px 600px at 85% -10%,#173126 0,transparent 60%),radial-gradient(900px 500px at -10% 110%,#13271f 0,transparent 55%),var(--bg);color:var(--txt);min-height:100vh;line-height:1.55}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.05;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='72' height='72' viewBox='0 0 72 72'><g fill='none' stroke='%23d8bb6c' stroke-width='1'><path d='M36 4l8 20 20 8-20 8-8 20-8-20-20-8 20-8z'/><circle cx='36' cy='36' r='10'/></g></svg>")}
+button,input,select,textarea{font:inherit;color:inherit}
+.hidden{display:none!important}
+/* shell */
+.top{position:sticky;top:0;z-index:20;background:rgba(10,20,17,.82);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.top-in{max-width:1240px;margin:auto;display:flex;align-items:center;gap:14px;padding:12px 18px;padding-top:max(12px,env(safe-area-inset-top))}
+.brand{display:flex;align-items:center;gap:11px;flex:1;min-width:0}
+.logo{width:42px;height:42px;border-radius:13px;background:linear-gradient(145deg,#1d3a2e,#0f1d18);border:1px solid var(--gold);display:grid;place-items:center;box-shadow:0 0 22px rgba(216,187,108,.18)}
+.brand b{font-family:Amiri,serif;font-size:24px;color:var(--gold2);line-height:1}
+.brand small{display:block;color:var(--mut);font-size:12px}
+.iconbtn{background:var(--card);border:1px solid var(--line);border-radius:12px;height:40px;padding:0 14px;cursor:pointer;display:inline-flex;align-items:center;gap:8px;color:var(--txt)}
+.iconbtn:hover{border-color:var(--gold)}
+.tabs{max-width:1240px;margin:auto;display:flex;gap:6px;padding:0 14px;overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{white-space:nowrap;background:none;border:0;border-bottom:3px solid transparent;color:var(--mut);padding:11px 14px;cursor:pointer;font-weight:500}
+.tab.on{color:var(--gold2);border-color:var(--gold);font-weight:700}
+main{max-width:1240px;margin:auto;padding:20px 18px 60px}
+.demo{background:linear-gradient(90deg,#4a3a12,#2d2410);color:var(--gold2);text-align:center;font-size:13px;padding:6px}
+/* cards */
+.grid{display:grid;gap:14px}
+.kpis{grid-template-columns:repeat(6,1fr)}
+.g2{grid-template-columns:2fr 1fr}.g3{grid-template-columns:repeat(3,1fr)}.gs{grid-template-columns:1fr 1fr}
+.card{background:linear-gradient(180deg,var(--card2),var(--card));border:1px solid var(--line);border-radius:var(--r);padding:18px;position:relative;overflow:hidden}
+.card h3{margin:0 0 4px;font-size:16px;color:var(--gold2)}
+.card .sub{color:var(--mut);font-size:12.5px;margin-bottom:12px}
+.kpi .l{color:var(--mut);font-size:13px}.kpi .v{font-size:34px;font-weight:800;color:var(--txt);line-height:1.15;margin:4px 0 2px;font-variant-numeric:tabular-nums}
+.kpi .d{font-size:12px;color:var(--mut)}.kpi.hl{border-color:rgba(216,187,108,.55);box-shadow:0 0 30px rgba(216,187,108,.08) inset}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 0 rgba(95,211,154,.7);animation:pulse 1.8s infinite;margin-inline-end:6px}
+@keyframes pulse{70%{box-shadow:0 0 0 9px rgba(95,211,154,0)}100%{box-shadow:0 0 0 0 rgba(95,211,154,0)}}
+.bars .row{display:grid;grid-template-columns:fit-content(140px) 1fr 44px;gap:10px;align-items:center;margin:9px 0;font-size:13.5px}
+.bars .t{height:9px;border-radius:6px;background:#0c1814;overflow:hidden}.bars .t i{display:block;height:100%;border-radius:6px;background:linear-gradient(90deg,#9c8338,var(--gold))}
+.bars .n{color:var(--mut);text-align:end;font-variant-numeric:tabular-nums}.bars .k{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chart{width:100%;height:200px;display:block}
+.legend{display:flex;flex-wrap:wrap;gap:10px;font-size:12.5px;color:var(--mut);margin-top:8px}.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-inline-end:5px}
+/* forms */
+label{display:block;font-size:13px;color:var(--mut);margin:12px 0 5px}
+input,select,textarea{width:100%;background:#0b1713;border:1px solid var(--line);border-radius:12px;padding:11px 13px;outline:none}
+input:focus,select:focus,textarea:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(216,187,108,.12)}
+textarea{resize:vertical;min-height:80px}
+.ltr{direction:ltr;text-align:left}
+.btn{background:linear-gradient(180deg,#e4c878,#c4a24e);color:#1a1405;border:0;border-radius:12px;padding:12px 20px;font-weight:800;cursor:pointer;box-shadow:0 6px 18px rgba(216,187,108,.2)}
+.btn:hover{filter:brightness(1.06)}.btn:disabled{opacity:.5;cursor:default}
+.btn.ghost{background:transparent;color:var(--gold2);border:1px solid var(--line);box-shadow:none}
+.btn.danger{background:transparent;border:1px solid #6b3434;color:var(--bad);box-shadow:none}
+.btn.sm{padding:6px 11px;font-size:12.5px;border-radius:9px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}.row3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.hint{font-size:12px;color:var(--mut);margin-top:5px}
+.seg{display:inline-flex;background:#0b1713;border:1px solid var(--line);border-radius:12px;padding:3px;gap:2px;flex-wrap:wrap}
+.seg button{background:none;border:0;padding:7px 13px;border-radius:9px;cursor:pointer;color:var(--mut)}.seg button.on{background:var(--gold);color:#1a1405;font-weight:700}
+/* table */
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}.toolbar input{max-width:300px}.toolbar select{max-width:170px}
+.tw{overflow-x:auto;border:1px solid var(--line);border-radius:14px}
+table{width:100%;border-collapse:collapse;font-size:13.5px;min-width:640px}
+th{background:#0f1f19;color:var(--gold2);text-align:start;padding:11px 12px;font-weight:700;position:sticky;top:0;cursor:pointer;white-space:nowrap}
+td{padding:10px 12px;border-top:1px solid #1d332a;vertical-align:middle}tr:hover td{background:rgba(216,187,108,.04)}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:99px;font-size:12px;border:1px solid var(--line)}
+.pill.on{color:var(--ok);border-color:rgba(95,211,154,.4);background:rgba(95,211,154,.08)}.pill.d1{color:var(--blue);border-color:rgba(111,180,232,.35)}.pill.off{color:var(--mut)}
+.pill.warn{color:var(--warn);border-color:rgba(240,179,90,.4)}.pill.bad{color:var(--bad);border-color:rgba(239,111,111,.4)}
+.pager{display:flex;justify-content:space-between;align-items:center;margin-top:12px;color:var(--mut);font-size:13px}
+.mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;direction:ltr;unicode-bidi:embed}
+/* list items */
+.item{border:1px solid var(--line);border-radius:14px;padding:13px 14px;margin:10px 0;background:#0e1c17}
+.item .h{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.item .h .sp{flex:1}
+.item pre{margin:10px 0 0;background:#08110e;border:1px solid #1b3027;border-radius:10px;padding:10px;max-height:220px;overflow:auto;direction:ltr;text-align:left;font-size:11.5px;white-space:pre-wrap;word-break:break-all;color:#cfe0d4}
+.preview{background:#0b1713;border:1px solid var(--line);border-radius:22px;padding:18px;max-width:340px;margin:auto;box-shadow:0 20px 50px rgba(0,0,0,.45)}
+.preview h4{margin:0 0 8px;font-size:17px;color:var(--txt)}.preview p{margin:0 0 16px;color:var(--mut);font-size:14px;white-space:pre-wrap}.preview .acts{display:flex;justify-content:flex-end;gap:14px;color:var(--gold2);font-weight:700}
+/* states */
+.sk{background:linear-gradient(90deg,#10201a 25%,#18302a 37%,#10201a 63%);background-size:400% 100%;animation:sk 1.3s infinite;border-radius:10px;height:18px}
+@keyframes sk{0%{background-position:100% 50%}100%{background-position:0 50%}}
+.empty{text-align:center;color:var(--mut);padding:34px 10px}.empty .e{font-size:34px;opacity:.7}
+.err{background:rgba(239,111,111,.08);border:1px solid rgba(239,111,111,.4);color:#f5b3b3;border-radius:12px;padding:12px 14px;margin:12px 0;font-size:14px}
+.toast{position:fixed;bottom:22px;inset-inline:0;margin:auto;width:max-content;max-width:90vw;background:#1b3a2d;border:1px solid var(--gold);color:var(--gold2);padding:11px 20px;border-radius:14px;z-index:50;box-shadow:0 10px 30px rgba(0,0,0,.5)}
+/* login */
+.login{min-height:100vh;display:grid;place-items:center;padding:20px}
+.lbox{width:100%;max-width:400px;text-align:center}
+.lbox .logo{width:74px;height:74px;border-radius:22px;margin:0 auto 14px}
+.lbox h1{font-family:Amiri,serif;color:var(--gold2);font-size:34px;margin:0}.lbox p{color:var(--mut);margin:4px 0 20px}
+.lbox form{text-align:start}.lbox .btn{width:100%;margin-top:16px}
+/* responsive */
+@media(max-width:1000px){.kpis{grid-template-columns:repeat(3,1fr)}.g2,.g3{grid-template-columns:1fr}}
+@media(max-width:620px){.kpis{grid-template-columns:repeat(2,1fr)}.gs,.row2,.row3{grid-template-columns:1fr}.kpi .v{font-size:28px}main{padding:14px 12px 60px}.iconbtn span{display:none}.brand small{display:none}
+ .tw.cards table{min-width:0}.tw.cards thead{display:none}.tw.cards tr{display:block;border-top:1px solid var(--line);padding:8px 4px}.tw.cards td{display:flex;justify-content:space-between;gap:12px;border:0;padding:4px 10px}.tw.cards td::before{content:attr(data-l);color:var(--mut)}}
 </style></head><body>
-<h1>نور | لوحة المطور</h1>
-<div id="login" class="card"><h2>دخول</h2><input id="em" type="email" placeholder="البريد" autocomplete="username"><input id="pw" type="password" placeholder="كلمة المرور" autocomplete="current-password"><button id="go">دخول</button><div id="lerr" class="muted"></div></div>
-<div id="app" style="display:none">
-<div class="card"><div class="row"><div><div class="muted">إجمالي الأجهزة</div><div class="big" id="total">-</div></div><div><div class="muted">أونلاين الآن (آخر 20 د)</div><div class="big" id="online">-</div></div><div><div class="muted">نشط آخر 24 س</div><div class="big" id="d1">-</div></div><div><div class="muted">أوفلاين</div><div class="big" id="off">-</div></div></div>
-<div class="muted">الأرقام تقريبية: التطبيق بيبعت نبضة عند الفتح وكل 12 ساعة تقريبًا، فالأونلاين معناه فتح التطبيق مؤخرًا.</div></div>
-<div class="card"><h2>تثبيتات جديدة يوميًا (آخر 14 يوم)</h2><div id="perday"></div></div>
-<div class="card"><h2>توزيع الإصدارات</h2><div id="versions"></div></div>
-<div class="card"><h2>التحديث</h2>
-<div class="row"><div><label>آخر إصدار (versionCode)</label><input id="lc" type="number"></div><div><label>اسم الإصدار</label><input id="ln" placeholder="0.10.1"></div><div><label>أقل إصدار مسموح (إجباري) versionCode</label><input id="mc" type="number"></div></div>
-<label>رابط الـ APK (https)</label><input id="url" dir="ltr"><label>SHA-256 (اختياري)</label><input id="sha" dir="ltr">
-<label>ملاحظة عربي</label><textarea id="na" rows="2"></textarea><label>ملاحظة English</label><textarea id="ne" rows="2" dir="ltr"></textarea>
-<button id="savecfg">حفظ التحديث</button><div id="cmsg" class="muted"></div>
-<div class="muted">اختياري: ضع لأعلى = إشعار مرة واحدة. أقل إصدار مسموح أكبر من إصدار المستخدم = إشعار إجباري لا يُغلق.</div></div>
-<div class="card"><h2>رسالة للمستخدمين</h2><input id="mt" placeholder="العنوان (اختياري)"><textarea id="mb" rows="3" placeholder="نص الرسالة"></textarea><label>تنتهي بعد (أيام، فاضي = بدون)</label><input id="md" type="number"><button id="send">نشر الرسالة</button><div id="msgs"></div></div>
-<div class="card"><h2>أخطاء التطبيق (آخر 50)</h2><div id="errs"></div></div>
-<button id="out" style="background:#3b4a3f;color:#f3ead2">خروج</button></div>
+<div id="demoBar" class="demo hidden">وضع العرض التجريبي: بيانات وهمية محلية، لا يتم الاتصال بقاعدة البيانات ولا الكتابة فيها</div>
+
+<section id="login" class="login hidden"><div class="lbox">
+ <div class="logo"><svg width="38" height="38" viewBox="0 0 72 72" fill="none" stroke="#d8bb6c" stroke-width="2.4"><path d="M36 6l8 20 20 8-20 8-8 20-8-20-20-8 20-8z"/><circle cx="36" cy="36" r="9"/></svg></div>
+ <h1>نور</h1><p>لوحة المطور</p>
+ <form id="lf" class="card"><label for="em">البريد الإلكتروني</label><input id="em" type="email" class="ltr" autocomplete="username" required>
+ <label for="pw">كلمة المرور</label><input id="pw" type="password" class="ltr" autocomplete="current-password" required>
+ <div id="lerr" class="err hidden"></div><button class="btn" id="lgo" type="submit">دخول</button></form>
+ <p class="hint" style="margin-top:16px">الدخول للمطور فقط. لا يتم حفظ أي بيانات خاصة بالمستخدمين.</p></div></section>
+
+<div id="app" class="hidden">
+<header class="top"><div class="top-in"><div class="brand"><div class="logo"><svg width="24" height="24" viewBox="0 0 72 72" fill="none" stroke="#d8bb6c" stroke-width="3"><path d="M36 6l8 20 20 8-20 8-8 20-8-20-20-8 20-8z"/></svg></div><div><b>نور</b><small id="upd">لوحة المطور</small></div></div>
+<button class="iconbtn" id="refresh" title="تحديث"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 11a8 8 0 10-2.3 5.7M20 4v7h-7"/></svg><span>تحديث</span></button>
+<button class="iconbtn" id="out"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 4h4v16h-4M10 8l-4 4 4 4M6 12h10"/></svg><span>خروج</span></button></div>
+<nav class="tabs" id="tabs"></nav></header>
+<main id="view"></main></div>
+<div id="toast" class="toast hidden"></div>
+
 <script type="module">
-import {createClient} from "https://esm.sh/@supabase/supabase-js@2";
-const sb=createClient("https://mzrbmjknvvckygwrzpnc.supabase.co","sb_publishable_ztRXdKMTVRcgmFhS22QnrA_D3OOr9nB");
-const $=id=>document.getElementById(id), esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-async function show(){const {data:{session}}=await sb.auth.getSession();$("login").style.display=session?"none":"";$("app").style.display=session?"":"none";if(session)load();}
-$("go").onclick=async()=>{const {error}=await sb.auth.signInWithPassword({email:$("em").value,password:$("pw").value});$("lerr").textContent=error?"فشل الدخول":"";show();};
-$("out").onclick=async()=>{await sb.auth.signOut();show();};
-async function load(){
- const {data:ins,error}=await sb.from("noor_installs").select("install_id,first_seen,last_seen,version_name,version_code").limit(10000);
- if(error){$("total").textContent="غير مسموح";return;}
- const now=Date.now(),m=x=>now-new Date(x).getTime();
- const on=ins.filter(i=>m(i.last_seen)<20*60e3).length,d1=ins.filter(i=>m(i.last_seen)<864e5).length;
- $("total").textContent=ins.length;$("online").textContent=on;$("off").textContent=ins.length-on;$("d1").textContent=d1;
- const days={};for(let k=13;k>=0;k--){days[new Date(now-k*864e5).toISOString().slice(0,10)]=0}
- ins.forEach(i=>{const d=new Date(i.first_seen).toISOString().slice(0,10);if(d in days)days[d]++});
- const mx=Math.max(1,...Object.values(days));$("perday").innerHTML=Object.entries(days).map(([d,n])=>`<div>${d} <span class="bar" style="width:${n/mx*60}%"></span> ${n}</div>`).join("");
- const vs={};ins.forEach(i=>{const k=i.version_name||"?";vs[k]=(vs[k]||0)+1});
- $("versions").innerHTML=Object.entries(vs).sort((a,b)=>b[1]-a[1]).map(([v,n])=>`<div>${esc(v)} <span class="bar" style="width:${n/ins.length*60}%"></span> ${n} (${Math.round(n/ins.length*100)}%)</div>`).join("");
- const {data:c}=await sb.from("noor_config").select("*").eq("id",1).single();
- if(c){$("lc").value=c.latest_code;$("ln").value=c.latest_name||"";$("mc").value=c.min_code;$("url").value=c.apk_url||"";$("sha").value=c.apk_sha256||"";$("na").value=c.note_ar||"";$("ne").value=c.note_en||"";}
- const {data:ms}=await sb.from("noor_messages").select("*").order("id",{ascending:false}).limit(10);
- $("msgs").innerHTML=(ms||[]).map(x=>`<div class="muted">#${x.id} ${x.active?"فعّالة":"متوقفة"}: ${esc(x.body).slice(0,80)} <a href="#" data-m="${x.id}" data-a="${x.active}">${x.active?"إيقاف":"تفعيل"}</a></div>`).join("");
- document.querySelectorAll("[data-m]").forEach(a=>a.onclick=async e=>{e.preventDefault();await sb.from("noor_messages").update({active:a.dataset.a!=="true"}).eq("id",a.dataset.m);load();});
- const {data:er}=await sb.from("noor_errors").select("*").order("id",{ascending:false}).limit(50);
- $("errs").innerHTML=(er||[]).length?`<table>${er.map(x=>`<tr><td>${new Date(x.created_at).toLocaleString("ar-EG")}<br>${esc(x.version_name)}<br>${esc(x.model)}</td><td dir="ltr">${esc(x.summary)}<pre>${esc(x.trace)}</pre></td></tr>`).join("")}</table>`:"<div class='muted'>لا توجد أخطاء</div>";
+const DEMO=new URLSearchParams(location.search).get("demo")==="1";
+const URL_="https://mzrbmjknvvckygwrzpnc.supabase.co",KEY="sb_publishable_ztRXdKMTVRcgmFhS22QnrA_D3OOr9nB";
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const nf=n=>new Intl.NumberFormat("ar-EG").format(n);
+const fdt=d=>d?new Date(d).toLocaleString("ar-EG",{dateStyle:"medium",timeStyle:"short"}):"-";
+const ago=d=>{if(!d)return"-";const s=(Date.now()-new Date(d))/1000;if(s<90)return"الآن";if(s<3600)return"قبل "+nf(Math.round(s/60))+" دقيقة";if(s<86400)return"قبل "+nf(Math.round(s/3600))+" ساعة";return"قبل "+nf(Math.round(s/86400))+" يوم"};
+const state=d=>{const m=Date.now()-new Date(d);return m<20*6e4?"on":m<864e5?"d1":m<7*864e5?"d7":"off"};
+const stLbl={on:"أونلاين",d1:"نشط اليوم",d7:"نشط هذا الأسبوع",off:"غير نشط"};
+function toast(t){const e=$("#toast");e.textContent=t;e.classList.remove("hidden");clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.add("hidden"),3200)}
+
+/* ---------- data layer ---------- */
+let sb=null,api;
+if(DEMO){
+  const now=Date.now(),R=(a,b)=>Math.floor(a+Math.random()*(b-a));let seed=7;const rnd=()=>(seed=(seed*16807)%2147483647)/2147483647;
+  const models=["Xiaomi 2107113SG","Samsung SM-S918B","Samsung SM-A546E","Redmi M2101K6G","Infinix X6816","OPPO CPH2487","Google Pixel 7","Realme RMX3511"];
+  const vers=[["0.10.0",33,.5],["0.9.11",32,.28],["0.9.10",31,.12],["0.9.9",30,.1]];
+  const devs=Array.from({length:137},(_,i)=>{const r=rnd();let acc=0,v=vers[0];for(const x of vers){acc+=x[2];if(r<acc){v=x;break}}
+    const first=now-Math.floor(rnd()*rnd()*40)*864e5-rnd()*864e5;const seen=rnd()<.12?now-R(1,15)*6e4:rnd()<.5?now-R(1,23)*36e5:now-R(1,12)*864e5;
+    return{install_id:crypto.randomUUID(),first_seen:new Date(first).toISOString(),last_seen:new Date(Math.max(seen,first)).toISOString(),version_name:v[0],version_code:v[1],android:String([14,13,12,11][R(0,4)]),model:models[R(0,8)],lang:rnd()<.9?"ar":"en"}});
+  const errs=[["java.lang.NullPointerException: Attempt to invoke virtual method on a null object","0.10.0"],["android.app.ForegroundServiceStartNotAllowedException","0.9.11"],["java.lang.IllegalStateException: Room cannot verify the data integrity","0.9.10"],["java.lang.OutOfMemoryError: Failed to allocate 4194312 bytes","0.9.11"]];
+  let errRows=Array.from({length:9},(_,i)=>({id:i+1,created_at:new Date(now-R(1,60)*36e5).toISOString(),version_name:errs[i%4][1],model:models[R(0,8)],android:"14",summary:errs[i%4][0],trace:errs[i%4][0]+"\n\tat com.noorapp.noor.core.notify.SoundService.play(SoundService.kt:212)\n\tat com.noorapp.noor.core.notify.Receivers.onReceive(Receivers.kt:58)\n\tat android.app.ActivityThread.handleReceiver(ActivityThread.java:4403)"}));
+  let cfg={latest_code:33,latest_name:"0.10.0",min_code:30,apk_url:"https://github.com/hamoo2026/noor/releases/download/v0.10.0/noor-0.10.0.apk",apk_sha256:"",note_ar:"تحسينات في المواعيد وإصلاح عرض الأذكار.",note_en:"Timing improvements and azkar layout fix."};
+  let msgs=[{id:3,title:"رمضان كريم",body:"كل عام وأنتم بخير. تقبل الله طاعاتكم.",active:true,starts_at:new Date(now+2*864e5).toISOString(),expires_at:new Date(now+9*864e5).toISOString(),created_at:new Date(now-864e5).toISOString()},{id:2,title:"",body:"تم تحديث مواعيد الصلاة على النبي.",active:true,starts_at:new Date(now-5*864e5).toISOString(),expires_at:new Date(now-2*864e5).toISOString(),created_at:new Date(now-6*864e5).toISOString()},{id:1,title:"مرحبًا",body:"شكرًا لتجربة نور.",active:false,starts_at:new Date(now-9*864e5).toISOString(),expires_at:null,created_at:new Date(now-9*864e5).toISOString()}];
+  const cnt=(k)=>{const m={};devs.forEach(d=>m[d[k]||"?"]=(m[d[k]||"?"]||0)+1);return Object.entries(m).sort((a,b)=>b[1]-a[1]).map(([v,n])=>({v,n}))};
+  api={user:"demo@noor.app",
+   async stats(){const per=[];for(let k=29;k>=0;k--){const d=new Date(now-k*864e5).toISOString().slice(0,10);per.push({d,n:devs.filter(x=>x.first_seen.slice(0,10)===d).length})}
+    return{total:devs.length,online:devs.filter(d=>state(d.last_seen)==="on").length,d1:devs.filter(d=>["on","d1"].includes(state(d.last_seen))).length,d7:devs.filter(d=>state(d.last_seen)!=="off").length,new_today:devs.filter(d=>now-new Date(d.first_seen)<864e5).length,new_7d:devs.filter(d=>now-new Date(d.first_seen)<7*864e5).length,errors_7d:errRows.length,per_day:per,versions:cnt("version_name").map(x=>({v:x.v,n:x.n})),androids:cnt("android"),models:cnt("model").slice(0,8),langs:cnt("lang")}},
+   async devices({q,version,status,sort,asc,page,size}){let a=devs.filter(d=>(!q||(d.model+d.install_id).toLowerCase().includes(q.toLowerCase()))&&(!version||d.version_name===version)&&(!status||(status==="on"?state(d.last_seen)==="on":status==="d1"?["on","d1"].includes(state(d.last_seen)):status==="d7"?state(d.last_seen)!=="off":state(d.last_seen)==="off")));
+    a.sort((x,y)=>(x[sort]>y[sort]?1:-1)*(asc?1:-1));return{rows:a.slice(page*size,page*size+size),total:a.length}},
+   async config(){return{...cfg}},async saveConfig(c){cfg={...cfg,...c};return null},
+   async messages(){return msgs.slice()},async addMessage(m){msgs.unshift({id:Date.now(),created_at:new Date().toISOString(),active:true,...m});return null},
+   async setMessage(id,p){const m=msgs.find(x=>x.id===id);Object.assign(m,p);return null},async delMessage(id){msgs=msgs.filter(x=>x.id!==id);return null},
+   async uploadApk(f,name){await new Promise(r=>setTimeout(r,900));return{url:"https://demo.supabase.co/storage/v1/object/public/noor-apk/"+name,error:null}},
+   async errors(){return errRows.slice().reverse()},async signOut(){location.search=""}};
+}else{
+  const {createClient}=await import("https://esm.sh/@supabase/supabase-js@2");
+  sb=createClient(URL_,KEY);
+  const ck=r=>{if(r.error)throw r.error;return r.data};
+  api={user:"",
+   async stats(){return ck(await sb.rpc("noor_admin_stats"))},
+   async devices({q,version,status,sort,asc,page,size}){let x=sb.from("noor_installs").select("install_id,first_seen,last_seen,version_name,version_code,android,model,lang",{count:"exact"});
+    if(q)x=x.or(`model.ilike.%${q.replace(/[%,()]/g,"")}%,install_id.ilike.%${q.replace(/[^0-9a-f-]/gi,"")}%`);if(version)x=x.eq("version_name",version);
+    const t=Date.now();if(status==="on")x=x.gt("last_seen",new Date(t-20*6e4).toISOString());else if(status==="d1")x=x.gt("last_seen",new Date(t-864e5).toISOString());else if(status==="d7")x=x.gt("last_seen",new Date(t-7*864e5).toISOString());else if(status==="off")x=x.lte("last_seen",new Date(t-7*864e5).toISOString());
+    const r=await x.order(sort,{ascending:asc}).range(page*size,page*size+size-1);if(r.error)throw r.error;return{rows:r.data,total:r.count||0}},
+   async config(){return ck(await sb.from("noor_config").select("*").eq("id",1).single())},
+   async saveConfig(c){return (await sb.from("noor_config").update({...c,updated_at:new Date().toISOString()}).eq("id",1)).error},
+   async messages(){return ck(await sb.from("noor_messages").select("*").order("id",{ascending:false}).limit(100))},
+   async addMessage(m){return (await sb.from("noor_messages").insert(m)).error},
+   async setMessage(id,p){return (await sb.from("noor_messages").update(p).eq("id",id)).error},
+   async delMessage(id){return (await sb.from("noor_messages").delete().eq("id",id)).error},
+   async uploadApk(f,name){const r=await sb.storage.from("noor-apk").upload(name,f,{upsert:true,contentType:"application/vnd.android.package-archive",cacheControl:"60"});if(r.error)return{error:r.error};return{url:sb.storage.from("noor-apk").getPublicUrl(name).data.publicUrl+"?v="+Date.now(),error:null}},
+   async errors(){return ck(await sb.from("noor_errors").select("*").order("id",{ascending:false}).limit(100))},
+   async signOut(){await sb.auth.signOut();boot()}};
 }
-$("savecfg").onclick=async()=>{const u=$("url").value.trim();if(u&&!u.startsWith("https://")){$("cmsg").textContent="الرابط لازم https";return;}
- const {error}=await sb.from("noor_config").update({latest_code:+$("lc").value||0,latest_name:$("ln").value,min_code:+$("mc").value||0,apk_url:u||null,apk_sha256:$("sha").value||null,note_ar:$("na").value,note_en:$("ne").value,updated_at:new Date().toISOString()}).eq("id",1);
- $("cmsg").textContent=error?"فشل الحفظ":"تم الحفظ";};
-$("send").onclick=async()=>{const b=$("mb").value.trim();if(!b)return;const d=+$("md").value;
- await sb.from("noor_messages").insert({title:$("mt").value||null,body:b,expires_at:d?new Date(Date.now()+d*864e5).toISOString():null});$("mb").value="";load();};
-show();
+
+/* ---------- charts ---------- */
+function areaChart(data){const W=640,H=200,p={l:30,r:8,t:12,b:24};const max=Math.max(3,...data.map(d=>d.n));const x=i=>p.l+i*(W-p.l-p.r)/Math.max(1,data.length-1),y=v=>p.t+(1-v/max)*(H-p.t-p.b);
+ const pts=data.map((d,i)=>[x(i),y(d.n)]);const line=pts.map((q,i)=>(i?"L":"M")+q[0].toFixed(1)+" "+q[1].toFixed(1)).join(" ");
+ const grid=[0,.5,1].map(f=>{const v=Math.round(max*f),yy=y(v);return`<line x1="${p.l}" x2="${W-p.r}" y1="${yy}" y2="${yy}" stroke="#254036" stroke-dasharray="3 5"/><text x="${p.l-6}" y="${yy+4}" fill="#9fb0a5" font-size="11" text-anchor="end">${v}</text>`}).join("");
+ const lbl=[0,Math.floor(data.length/2),data.length-1].map(i=>`<text x="${x(i)}" y="${H-6}" fill="#9fb0a5" font-size="11" text-anchor="middle">${esc(data[i].d.slice(5))}</text>`).join("");
+ const bars=data.map((d,i)=>`<rect x="${x(i)-3.4}" y="${y(d.n)}" width="6.8" height="${Math.max(0,H-p.b-y(d.n))}" rx="3" fill="url(#g1)" opacity=".75"><title>${esc(d.d)}: ${d.n}</title></rect>`).join("");
+ return`<svg class="chart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="تثبيتات جديدة يوميًا"><defs><linearGradient id="g1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f0dc9c"/><stop offset="1" stop-color="#9c8338"/></linearGradient></defs>${grid}${bars}<path d="${line}" fill="none" stroke="#f0dc9c" stroke-width="2" stroke-linejoin="round"/>${lbl}</svg>`}
+const PAL=["#d8bb6c","#5fd39a","#6fb4e8","#e08f6a","#a98be0","#8aa39a"];
+function donut(items,total){let a=-Math.PI/2;const R=62,r=40,C=80;const seg=items.slice(0,6).map((it,i)=>{const f=it.n/total,b=a+f*Math.PI*2;const large=f>.5?1:0;const P=(ang,rad)=>[C+rad*Math.cos(ang),C+rad*Math.sin(ang)];const [x1,y1]=P(a,R),[x2,y2]=P(b-.0001,R),[x3,y3]=P(b-.0001,r),[x4,y4]=P(a,r);a=b;
+  return f>=.9999?`<circle cx="${C}" cy="${C}" r="${(R+r)/2}" fill="none" stroke="${PAL[i]}" stroke-width="${R-r}"/>`:`<path d="M${x1} ${y1}A${R} ${R} 0 ${large} 1 ${x2} ${y2}L${x3} ${y3}A${r} ${r} 0 ${large} 0 ${x4} ${y4}Z" fill="${PAL[i]}"><title>${esc(it.v)}: ${it.n}</title></path>`}).join("");
+ return`<div style="display:flex;gap:18px;align-items:center;flex-wrap:wrap"><svg width="160" height="160" viewBox="0 0 160 160" role="img" aria-label="توزيع الإصدارات">${seg}<text x="80" y="76" fill="#f3ecd8" font-size="26" font-weight="800" text-anchor="middle">${nf(total)}</text><text x="80" y="96" fill="#9fb0a5" font-size="11" text-anchor="middle">جهاز</text></svg><div class="legend" style="flex-direction:column;gap:7px;margin:0">${items.slice(0,6).map((it,i)=>`<div><i style="background:${PAL[i]}"></i><span class="mono">${esc(it.v)}</span> · ${nf(it.n)} (${Math.round(it.n/total*100)}%)</div>`).join("")}</div></div>`}
+function bars(items,total){return`<div class="bars">${items.map(it=>`<div class="row"><span class="k" title="${esc(it.v)}">${esc(it.v)}</span><span class="t"><i style="width:${Math.max(3,it.n/Math.max(1,total)*100)}%"></i></span><span class="n">${nf(it.n)}</span></div>`).join("")||'<div class="empty">لا بيانات</div>'}</div>`}
+const skel=n=>Array.from({length:n},()=>'<div class="sk" style="margin:10px 0"></div>').join("");
+const errBox=e=>`<div class="err">تعذر تحميل البيانات: ${esc(e?.message||e)}<br><button class="btn ghost sm" style="margin-top:8px" onclick="location.reload()">إعادة المحاولة</button></div>`;
+
+/* ---------- views ---------- */
+const TABS=[["overview","نظرة عامة"],["devices","الأجهزة"],["update","التحديث"],["messages","الرسائل"],["errors","الأخطاء"]];
+let cur=(TABS.find(t=>t[0]===location.hash.slice(1))||TABS[0])[0];
+function renderTabs(){$("#tabs").innerHTML=TABS.map(([k,l])=>`<button class="tab ${k===cur?"on":""}" data-t="${k}">${l}</button>`).join("");document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{cur=b.dataset.t;go()});document.querySelector(".tab.on")?.scrollIntoView({inline:"center",block:"nearest"})}
+function go(){renderTabs();({overview,devices,update,messages,errors})[cur]();window.scrollTo({top:0})}
+
+async function overview(){const v=$("#view");v.innerHTML=`<div class="grid kpis">${Array(6).fill('<div class="card">'+skel(3)+"</div>").join("")}</div><div class="card" style="margin-top:14px">${skel(6)}</div>`;
+ let s;try{s=await api.stats()}catch(e){v.innerHTML=errBox(e);return}
+ $("#upd").textContent="آخر تحديث "+new Date().toLocaleTimeString("ar-EG",{hour:"2-digit",minute:"2-digit"});
+ const K=(l,val,d,cls="")=>`<div class="card kpi ${cls}"><div class="l">${l}</div><div class="v">${val}</div><div class="d">${d}</div></div>`;
+ const pct=s.total?Math.round(s.d7/s.total*100):0;
+ if(!s.total){v.innerHTML=`<div class="card empty"><div class="e">☪</div><h3>لا توجد أجهزة بعد</h3><p>ستظهر الإحصاءات هنا بعد أن يفتح أول جهاز نسخة 0.10.0 أو أحدث.</p></div>`;return}
+ v.innerHTML=`<div class="grid kpis">
+ ${K('<span class="dot"></span>أونلاين الآن',nf(s.online),"آخر 20 دقيقة","hl")}${K("نشط خلال 24 ساعة",nf(s.d1),`${s.total?Math.round(s.d1/s.total*100):0}% من الأجهزة`)}${K("نشط خلال 7 أيام",nf(s.d7),pct+"% من الأجهزة")}
+ ${K("إجمالي الأجهزة",nf(s.total),"كل التثبيتات المسجلة")}${K("تثبيتات جديدة اليوم",nf(s.new_today),`${nf(s.new_7d)} خلال 7 أيام`)}${K("أخطاء آخر 7 أيام",nf(s.errors_7d),s.errors_7d?"راجع تبويب الأخطاء":"لا توجد أخطاء",s.errors_7d?"":"")}</div>
+ <div class="grid g2" style="margin-top:14px"><div class="card"><h3>تثبيتات جديدة يوميًا</h3><div class="sub">آخر 30 يومًا (أول ظهور للجهاز)</div>${areaChart(s.per_day)}</div>
+ <div class="card"><h3>توزيع الإصدارات</h3><div class="sub">نسبة الأجهزة على كل إصدار</div>${donut(s.versions,s.total)}</div></div>
+ <div class="grid g3" style="margin-top:14px"><div class="card"><h3>أندرويد</h3><div class="sub">إصدارات النظام</div>${bars(s.androids,s.total)}</div><div class="card"><h3>أكثر الأجهزة</h3><div class="sub">موديل الموبايل</div>${bars(s.models,s.total)}</div><div class="card"><h3>اللغة</h3><div class="sub">لغة النظام على الجهاز</div>${bars(s.langs,s.total)}</div></div>
+ <p class="hint" style="margin-top:14px">الأرقام تقريبية: كل جهاز يرسل نبضة عند فتح التطبيق وكل 12 ساعة تقريبًا، فحالة «أونلاين» تعني فتح التطبيق مؤخرًا. الإحصاء مجهول بالكامل.</p>`}
+
+const D={q:"",version:"",status:"",sort:"last_seen",asc:false,page:0,size:25};
+async function devices(){const v=$("#view");const st=await api.stats().catch(()=>null);const vs=(st?.versions||[]).map(x=>x.v);
+ v.innerHTML=`<div class="card"><div class="toolbar"><input id="dq" placeholder="بحث بالموديل أو رقم الجهاز" value="${esc(D.q)}">
+ <select id="dv"><option value="">كل الإصدارات</option>${vs.map(x=>`<option ${x===D.version?"selected":""}>${esc(x)}</option>`).join("")}</select>
+ <select id="ds"><option value="">كل الحالات</option>${Object.entries({on:"أونلاين الآن",d1:"نشط 24 ساعة",d7:"نشط 7 أيام",off:"غير نشط"}).map(([k,l])=>`<option value="${k}" ${k===D.status?"selected":""}>${l}</option>`).join("")}</select></div><div id="dt">${skel(6)}</div></div>`;
+ let tm;$("#dq").oninput=e=>{clearTimeout(tm);tm=setTimeout(()=>{D.q=e.target.value.trim();D.page=0;load()},300)};$("#dv").onchange=e=>{D.version=e.target.value;D.page=0;load()};$("#ds").onchange=e=>{D.status=e.target.value;D.page=0;load()};
+ async function load(){const t=$("#dt");t.innerHTML=skel(5);let r;try{r=await api.devices(D)}catch(e){t.innerHTML=errBox(e);return}
+  if(!r.rows.length){t.innerHTML='<div class="empty"><div class="e">⌕</div>لا توجد أجهزة مطابقة</div>';return}
+  const th=(k,l)=>`<th data-s="${k}">${l}${D.sort===k?(D.asc?" ▲":" ▼"):""}</th>`;
+  t.innerHTML=`<div class="tw cards"><table><thead><tr>${th("model","الجهاز")}${th("version_name","الإصدار")}${th("android","أندرويد")}${th("last_seen","آخر ظهور")}${th("first_seen","أول ظهور")}<th>الحالة</th></tr></thead><tbody>${r.rows.map(d=>{const s=state(d.last_seen);return`<tr><td data-l="الجهاز"><span style="text-align:end"><b>${esc(d.model||"?")}</b><br><span class="mono" style="color:var(--mut)">${esc(d.install_id.slice(0,8))}</span></span></td><td data-l="الإصدار"><span class="mono">${esc(d.version_name)}</span></td><td data-l="أندرويد">${esc(d.android||"?")}</td><td data-l="آخر ظهور">${ago(d.last_seen)}</td><td data-l="أول ظهور">${fdt(d.first_seen)}</td><td data-l="الحالة"><span class="pill ${s}">${s==="on"?'<span class="dot" style="margin:0"></span>':""}${stLbl[s]}</span></td></tr>`}).join("")}</tbody></table></div>
+  <div class="pager"><span>${nf(D.page*D.size+1)}-${nf(Math.min(r.total,(D.page+1)*D.size))} من ${nf(r.total)}</span><span><button class="btn ghost sm" id="pp" ${D.page?"":"disabled"}>السابق</button> <button class="btn ghost sm" id="pn" ${(D.page+1)*D.size>=r.total?"disabled":""}>التالي</button></span></div>`;
+  t.querySelectorAll("th[data-s]").forEach(h=>h.onclick=()=>{const k=h.dataset.s;D.asc=D.sort===k?!D.asc:false;D.sort=k;D.page=0;load()});
+  const pp=$("#pp"),pn=$("#pn");pp.onclick=()=>{D.page--;load()};pn.onclick=()=>{D.page++;load()}}
+ load()}
+
+async function update(){const v=$("#view");v.innerHTML=`<div class="card">${skel(8)}</div>`;let c;try{c=await api.config()}catch(e){v.innerHTML=errBox(e);return}
+ const prev=()=>{const forced=(+$("#mc").value||0)>0&&(+$("#mc").value)>CURCODE;return`<div class="preview"><h4>إصدار جديد ${esc($("#ln").value||"")}</h4><p>${esc($("#na").value)||"يوجد إصدار أحدث من التطبيق."}</p><div class="acts">${forced?"":"<span>لاحقًا</span>"}<span>تحميل</span></div></div>`};
+ const CURCODE=0;
+ v.innerHTML=`<div class="grid gs"><div class="card"><h3>إصدار التحديث</h3><div class="sub">يظهر للمستخدمين الذين إصدارهم أقدم. يفتح زر «تحميل» الرابط في المتصفح.</div>
+ <div class="row2"><div><label>رقم الإصدار الأحدث (versionCode)</label><input id="lc" type="number" min="0" class="ltr" value="${esc(c.latest_code)}"></div><div><label>اسم الإصدار</label><input id="ln" class="ltr" placeholder="0.10.1" value="${esc(c.latest_name||"")}"></div></div>
+ <label>رفع ملف الـ APK</label>
+ <div id="drop" class="item" style="border-style:dashed;text-align:center;cursor:pointer;padding:18px"><input id="apkf" type="file" accept=".apk,application/vnd.android.package-archive" class="hidden"><div id="dtxt">اضغط لاختيار ملف APK (حتى 50 ميجا)<div class="hint">يتم حساب SHA-256 تلقائيًا ثم الرفع وملء الرابط</div></div></div>
+ <label>رابط ملف الـ APK (https فقط)</label><input id="url" class="ltr" placeholder="https://github.com/.../noor.apk" value="${esc(c.apk_url||"")}">
+ <label>بصمة SHA-256 (اختياري)</label><input id="sha" class="ltr" value="${esc(c.apk_sha256||"")}">
+ <div class="row2"><div><label>ملاحظة بالعربي</label><textarea id="na">${esc(c.note_ar||"")}</textarea></div><div><label>Note in English</label><textarea id="ne" class="ltr">${esc(c.note_en||"")}</textarea></div></div>
+ <label>نوع التحديث</label><div class="seg" id="kind"><button type="button" data-k="opt">اختياري (مرة واحدة)</button><button type="button" data-k="force">إجباري (لا يُغلق)</button></div>
+ <input id="mc" type="hidden" value="${esc(c.min_code)}"><div class="hint" id="kh"></div>
+ <div id="cerr" class="err hidden"></div><div style="margin-top:16px;display:flex;gap:10px;align-items:center"><button class="btn" id="sv">حفظ ونشر</button><span class="hint" id="cmsg"></span></div></div>
+ <div class="card"><h3>معاينة ما يراه المستخدم</h3><div class="sub">نافذة التحديث داخل التطبيق</div><div id="pv"></div>
+ <p class="hint" style="margin-top:16px">التحديث الإجباري: يظهر لكل من إصداره أقل من «أقل إصدار مسموح» ولا يمكن إغلاقه حتى يحمّل. استخدمه فقط عند وجود خلل خطير. المستخدم يثبّت الملف بنفسه وأندرويد يتحقق من التوقيع.</p></div></div>`;
+ const setKind=()=>{const f=(+$("#mc").value||0)>0;document.querySelectorAll("#kind button").forEach(b=>b.classList.toggle("on",(b.dataset.k==="force")===f));$("#kh").textContent=f?`إجباري لكل من إصداره أقل من ${$("#mc").value}`:"اختياري: يظهر مرة واحدة لكل مستخدم ويمكنه تأجيله.";$("#pv").innerHTML=prev(f)};
+ const prev2=f=>`<div class="preview"><h4>إصدار جديد ${esc($("#ln").value||"")}</h4><p>${esc($("#na").value)||"يوجد إصدار أحدث من التطبيق."}</p><div class="acts">${f?"":"<span>لاحقًا</span>"}<span>تحميل</span></div></div>`;
+ window.prev=prev2;
+ document.querySelectorAll("#kind button").forEach(b=>b.onclick=()=>{$("#mc").value=b.dataset.k==="force"?($("#lc").value||0):0;setKind()});
+ ["ln","na","lc"].forEach(i=>$("#"+i).oninput=()=>{if((+$("#mc").value||0)>0)$("#mc").value=$("#lc").value||0;setKind()});setKind();
+ $("#drop").onclick=()=>$("#apkf").click();
+ $("#apkf").onchange=async e=>{const f=e.target.files[0];if(!f)return;const er=$("#cerr");er.classList.add("hidden");
+  if(!/\.apk$/i.test(f.name)||f.size>50*1048576||f.size<100000){er.textContent="الملف لازم يكون APK بحجم صحيح (أقل من 50 ميجا)";er.classList.remove("hidden");return}
+  const ver=($("#ln").value||"").trim().replace(/[^0-9A-Za-z._-]/g,"");if(!ver){er.textContent="اكتب اسم الإصدار أولًا";er.classList.remove("hidden");return}
+  $("#dtxt").innerHTML='<div class="sk" style="height:12px;margin:6px auto;width:60%"></div>جارٍ حساب البصمة والرفع...';
+  try{const buf=await f.arrayBuffer();const h=[...new Uint8Array(await crypto.subtle.digest("SHA-256",buf))].map(b=>b.toString(16).padStart(2,"0")).join("");
+   const r=await api.uploadApk(f,"noor-"+ver+".apk");if(r.error)throw r.error;$("#sha").value=h;$("#url").value=r.url;
+   $("#dtxt").innerHTML='<b style="color:var(--ok)">تم الرفع</b><div class="hint">'+esc(f.name)+" · "+(f.size/1048576).toFixed(1)+" ميجا · SHA-256 "+h.slice(0,12)+"...</div>";toast("تم رفع الملف. اضغط حفظ ونشر لإظهار التحديث للمستخدمين")}
+  catch(x){$("#dtxt").textContent="اضغط لاختيار ملف APK";er.textContent="فشل الرفع: "+(x.message||x);er.classList.remove("hidden")}};
+ $("#sv").onclick=async()=>{const u=$("#url").value.trim(),sh=$("#sha").value.trim(),er=$("#cerr");er.classList.add("hidden");
+  const bad=(u&&!/^https:\/\//.test(u))?"الرابط لازم يبدأ بـ https://":(sh&&!/^[0-9a-fA-F]{64}$/.test(sh))?"بصمة SHA-256 لازم تكون 64 حرفًا":(+$("#lc").value>0&&!u)?"أدخل رابط الـ APK":"";
+  if(bad){er.textContent=bad;er.classList.remove("hidden");return}
+  if((+$("#mc").value||0)>0&&!confirm("هذا تحديث إجباري ولن يستطيع المستخدمون المتأخرون إغلاقه. متأكد؟"))return;
+  $("#sv").disabled=true;const e=await api.saveConfig({latest_code:+$("#lc").value||0,latest_name:$("#ln").value.trim(),min_code:+$("#mc").value||0,apk_url:u||null,apk_sha256:sh||null,note_ar:$("#na").value,note_en:$("#ne").value});$("#sv").disabled=false;
+  if(e){er.textContent="فشل الحفظ: "+e.message;er.classList.remove("hidden")}else{toast("تم الحفظ والنشر");$("#cmsg").textContent="آخر حفظ "+new Date().toLocaleTimeString("ar-EG")}}}
+
+const mstat=m=>!m.active?["off","متوقفة"]:m.expires_at&&new Date(m.expires_at)<Date.now()?["off","منتهية"]:new Date(m.starts_at)>Date.now()?["warn","مجدولة"]:["on","فعّالة"];
+async function messages(){const v=$("#view");v.innerHTML=`<div class="card">${skel(8)}</div>`;let list;try{list=await api.messages()}catch(e){v.innerHTML=errBox(e);return}
+ const loc=d=>{const z=new Date(d.getTime()-d.getTimezoneOffset()*6e4);return z.toISOString().slice(0,16)};
+ v.innerHTML=`<div class="grid gs"><div class="card"><h3>رسالة جديدة</h3><div class="sub">تظهر مرة واحدة لكل مستخدم في نافذة داخل التطبيق.</div>
+ <label>العنوان (اختياري)</label><input id="mt" maxlength="80"><label>نص الرسالة</label><textarea id="mb" maxlength="600" rows="4"></textarea><div class="hint" dir="ltr" style="text-align:end"><span id="cc">0</span> / 600</div>
+ <div class="row2"><div><label>تبدأ في</label><input id="ms" type="datetime-local" class="ltr" value="${loc(new Date())}"></div><div><label>تنتهي بعد</label><select id="me"><option value="0">بدون انتهاء</option><option value="1">يوم</option><option value="3">3 أيام</option><option value="7" selected>7 أيام</option><option value="30">30 يومًا</option></select></div></div>
+ <div id="merr" class="err hidden"></div><div style="margin-top:16px"><button class="btn" id="mp">نشر الرسالة</button></div></div>
+ <div class="card"><h3>معاينة</h3><div class="sub">كما تظهر على الموبايل</div><div id="mpv"></div></div></div>
+ <div class="card" style="margin-top:14px"><h3>الرسائل السابقة</h3><div class="sub">الرسالة المجدولة لا تظهر قبل موعدها، ويمكن إيقافها في أي وقت.</div><div id="ml">${list.length?list.map(m=>{const [c,l]=mstat(m);return`<div class="item"><div class="h"><span class="pill ${c}">${l}</span><b>${esc(m.title||"بدون عنوان")}</b><span class="sp"></span><span class="hint">${fdt(m.starts_at)}${m.expires_at?" → "+fdt(m.expires_at):""}</span></div><div style="margin:8px 0;color:var(--mut);white-space:pre-wrap">${esc(m.body)}</div><div style="display:flex;gap:8px"><button class="btn ghost sm" data-a="${m.id}" data-v="${m.active}">${m.active?"إيقاف":"تفعيل"}</button><button class="btn danger sm" data-d="${m.id}">حذف</button></div></div>`}).join(""):'<div class="empty"><div class="e">✉</div>لا توجد رسائل بعد</div>'}</div></div>`;
+ const pv=()=>{$("#mpv").innerHTML=`<div class="preview"><h4>${esc($("#mt").value||"رسالة من المطور")}</h4><p>${esc($("#mb").value)||"نص الرسالة يظهر هنا"}</p><div class="acts"><span>حسنًا</span></div></div>`;$("#cc").textContent=$("#mb").value.length};
+ ["mt","mb"].forEach(i=>$("#"+i).oninput=pv);pv();
+ $("#mp").onclick=async()=>{const b=$("#mb").value.trim(),er=$("#merr");er.classList.add("hidden");if(!b){er.textContent="اكتب نص الرسالة";er.classList.remove("hidden");return}
+  const st=new Date($("#ms").value);if(isNaN(st)){er.textContent="موعد البدء غير صحيح";er.classList.remove("hidden");return}
+  const d=+$("#me").value;$("#mp").disabled=true;const e=await api.addMessage({title:$("#mt").value.trim()||null,body:b,starts_at:st.toISOString(),expires_at:d?new Date(st.getTime()+d*864e5).toISOString():null});$("#mp").disabled=false;
+  if(e){er.textContent="فشل النشر: "+e.message;er.classList.remove("hidden")}else{toast("تم النشر");messages()}};
+ document.querySelectorAll("[data-a]").forEach(b=>b.onclick=async()=>{const e=await api.setMessage(DEMO?+b.dataset.a:+b.dataset.a,{active:b.dataset.v!=="true"});if(e)toast("فشل: "+e.message);else messages()});
+ document.querySelectorAll("[data-d]").forEach(b=>b.onclick=async()=>{if(!confirm("حذف الرسالة نهائيًا؟"))return;const e=await api.delMessage(+b.dataset.d);if(e)toast("فشل: "+e.message);else messages()})}
+
+async function errors(){const v=$("#view");v.innerHTML=`<div class="card">${skel(8)}</div>`;let list;try{list=await api.errors()}catch(e){v.innerHTML=errBox(e);return}
+ if(!list.length){v.innerHTML='<div class="card empty"><div class="e">✓</div><h3>لا توجد أخطاء</h3><p>تظهر هنا تقارير الأعطال المرسلة من التطبيق (بدون بيانات شخصية).</p></div>';return}
+ const groups={};list.forEach(e=>{const k=(e.summary||"").slice(0,90);(groups[k]=groups[k]||[]).push(e)});
+ const vers=[...new Set(list.map(e=>e.version_name))];
+ v.innerHTML=`<div class="card"><div class="toolbar"><select id="ev"><option value="">كل الإصدارات</option>${vers.map(x=>`<option>${esc(x)}</option>`).join("")}</select><span class="hint">${nf(list.length)} تقرير، ${nf(Object.keys(groups).length)} نوع</span></div><div id="el"></div></div>`;
+ const draw=()=>{const f=$("#ev").value;$("#el").innerHTML=Object.entries(groups).map(([k,a])=>{a=a.filter(x=>!f||x.version_name===f);if(!a.length)return"";const vs=[...new Set(a.map(x=>x.version_name))];return`<div class="item"><div class="h"><span class="pill bad" dir="ltr">×${a.length}</span><b class="mono" style="direction:ltr;text-align:left;flex:1;min-width:0;overflow-wrap:anywhere;word-break:break-all">${esc(k)}</b><span class="hint">${esc(vs.join("، "))} · ${ago(a[0].created_at)}</span></div><details style="margin-top:8px"><summary style="cursor:pointer;color:var(--gold2)">التفاصيل (${nf(Math.min(a.length,5))})</summary>${a.slice(0,5).map(x=>`<div class="hint" style="margin-top:10px">${fdt(x.created_at)} · ${esc(x.version_name)} · ${esc(x.model||"?")} · أندرويد ${esc(x.android||"?")}</div><pre>${esc(x.trace)}</pre>`).join("")}</details></div>`}).join("")||'<div class="empty">لا نتائج</div>'};
+ $("#ev").onchange=draw;draw()}
+
+/* ---------- boot / auth ---------- */
+async function boot(){
+ if(DEMO){$("#demoBar").classList.remove("hidden");$("#login").classList.add("hidden");$("#app").classList.remove("hidden");go();return}
+ const {data:{session}}=await sb.auth.getSession();
+ $("#login").classList.toggle("hidden",!!session);$("#app").classList.toggle("hidden",!session);
+ if(session)go();
+}
+$("#lf").onsubmit=async e=>{e.preventDefault();const b=$("#lgo");b.disabled=true;b.textContent="جارٍ الدخول...";$("#lerr").classList.add("hidden");
+ const {error}=await sb.auth.signInWithPassword({email:$("#em").value.trim(),password:$("#pw").value});b.disabled=false;b.textContent="دخول";
+ if(error){$("#lerr").textContent="فشل الدخول. تأكد من البريد وكلمة المرور.";$("#lerr").classList.remove("hidden")}else boot()};
+$("#out").onclick=()=>api.signOut();$("#refresh").onclick=()=>go();
+if(!DEMO)sb.auth.onAuthStateChange((ev)=>{if(ev==="SIGNED_OUT")boot()});
+boot();
 </script></body></html>
