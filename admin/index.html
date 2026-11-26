@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>نور | لوحة المطور</title>
+<meta name="robots" content="noindex,nofollow">
+<style>
+body{font-family:system-ui,sans-serif;background:#0f1a17;color:#f3ead2;margin:0;padding:16px;max-width:900px;margin-inline:auto}
+h1,h2{color:#d6b96a;margin:.4em 0}.card{background:#16251f;border:1px solid #3b4a3f;border-radius:14px;padding:14px;margin:12px 0}
+input,textarea,select,button{font:inherit;padding:9px;border-radius:9px;border:1px solid #3b4a3f;background:#0f1a17;color:#f3ead2;width:100%;box-sizing:border-box;margin:4px 0}
+button{background:#d6b96a;color:#10201b;border:0;font-weight:700;cursor:pointer}.row{display:flex;gap:10px;flex-wrap:wrap}.row>div{flex:1;min-width:120px}
+.big{font-size:34px;color:#d6b96a;font-weight:800}.muted{color:#a9b3a6;font-size:13px}table{width:100%;border-collapse:collapse;font-size:13px}td,th{padding:5px;border-bottom:1px solid #2b3a30;text-align:start;vertical-align:top}
+pre{white-space:pre-wrap;direction:ltr;text-align:left;max-height:160px;overflow:auto;font-size:11px}
+.bar{background:#d6b96a;height:10px;border-radius:5px;display:inline-block}
+</style></head><body>
+<h1>نور | لوحة المطور</h1>
+<div id="login" class="card"><h2>دخول</h2><input id="em" type="email" placeholder="البريد" autocomplete="username"><input id="pw" type="password" placeholder="كلمة المرور" autocomplete="current-password"><button id="go">دخول</button><div id="lerr" class="muted"></div></div>
+<div id="app" style="display:none">
+<div class="card"><div class="row"><div><div class="muted">إجمالي الأجهزة</div><div class="big" id="total">-</div></div><div><div class="muted">أونلاين الآن (آخر 20 د)</div><div class="big" id="online">-</div></div><div><div class="muted">نشط آخر 24 س</div><div class="big" id="d1">-</div></div><div><div class="muted">أوفلاين</div><div class="big" id="off">-</div></div></div>
+<div class="muted">الأرقام تقريبية: التطبيق بيبعت نبضة عند الفتح وكل 12 ساعة تقريبًا، فالأونلاين معناه فتح التطبيق مؤخرًا.</div></div>
+<div class="card"><h2>تثبيتات جديدة يوميًا (آخر 14 يوم)</h2><div id="perday"></div></div>
+<div class="card"><h2>توزيع الإصدارات</h2><div id="versions"></div></div>
+<div class="card"><h2>التحديث</h2>
+<div class="row"><div><label>آخر إصدار (versionCode)</label><input id="lc" type="number"></div><div><label>اسم الإصدار</label><input id="ln" placeholder="0.10.1"></div><div><label>أقل إصدار مسموح (إجباري) versionCode</label><input id="mc" type="number"></div></div>
+<label>رابط الـ APK (https)</label><input id="url" dir="ltr"><label>SHA-256 (اختياري)</label><input id="sha" dir="ltr">
+<label>ملاحظة عربي</label><textarea id="na" rows="2"></textarea><label>ملاحظة English</label><textarea id="ne" rows="2" dir="ltr"></textarea>
+<button id="savecfg">حفظ التحديث</button><div id="cmsg" class="muted"></div>
+<div class="muted">اختياري: ضع لأعلى = إشعار مرة واحدة. أقل إصدار مسموح أكبر من إصدار المستخدم = إشعار إجباري لا يُغلق.</div></div>
+<div class="card"><h2>رسالة للمستخدمين</h2><input id="mt" placeholder="العنوان (اختياري)"><textarea id="mb" rows="3" placeholder="نص الرسالة"></textarea><label>تنتهي بعد (أيام، فاضي = بدون)</label><input id="md" type="number"><button id="send">نشر الرسالة</button><div id="msgs"></div></div>
+<div class="card"><h2>أخطاء التطبيق (آخر 50)</h2><div id="errs"></div></div>
+<button id="out" style="background:#3b4a3f;color:#f3ead2">خروج</button></div>
+<script type="module">
+import {createClient} from "https://esm.sh/@supabase/supabase-js@2";
+const sb=createClient("https://mzrbmjknvvckygwrzpnc.supabase.co","sb_publishable_ztRXdKMTVRcgmFhS22QnrA_D3OOr9nB");
+const $=id=>document.getElementById(id), esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+async function show(){const {data:{session}}=await sb.auth.getSession();$("login").style.display=session?"none":"";$("app").style.display=session?"":"none";if(session)load();}
+$("go").onclick=async()=>{const {error}=await sb.auth.signInWithPassword({email:$("em").value,password:$("pw").value});$("lerr").textContent=error?"فشل الدخول":"";show();};
+$("out").onclick=async()=>{await sb.auth.signOut();show();};
+async function load(){
+ const {data:ins,error}=await sb.from("noor_installs").select("install_id,first_seen,last_seen,version_name,version_code").limit(10000);
+ if(error){$("total").textContent="غير مسموح";return;}
+ const now=Date.now(),m=x=>now-new Date(x).getTime();
+ const on=ins.filter(i=>m(i.last_seen)<20*60e3).length,d1=ins.filter(i=>m(i.last_seen)<864e5).length;
+ $("total").textContent=ins.length;$("online").textContent=on;$("off").textContent=ins.length-on;$("d1").textContent=d1;
+ const days={};for(let k=13;k>=0;k--){days[new Date(now-k*864e5).toISOString().slice(0,10)]=0}
+ ins.forEach(i=>{const d=new Date(i.first_seen).toISOString().slice(0,10);if(d in days)days[d]++});
+ const mx=Math.max(1,...Object.values(days));$("perday").innerHTML=Object.entries(days).map(([d,n])=>`<div>${d} <span class="bar" style="width:${n/mx*60}%"></span> ${n}</div>`).join("");
+ const vs={};ins.forEach(i=>{const k=i.version_name||"?";vs[k]=(vs[k]||0)+1});
+ $("versions").innerHTML=Object.entries(vs).sort((a,b)=>b[1]-a[1]).map(([v,n])=>`<div>${esc(v)} <span class="bar" style="width:${n/ins.length*60}%"></span> ${n} (${Math.round(n/ins.length*100)}%)</div>`).join("");
+ const {data:c}=await sb.from("noor_config").select("*").eq("id",1).single();
+ if(c){$("lc").value=c.latest_code;$("ln").value=c.latest_name||"";$("mc").value=c.min_code;$("url").value=c.apk_url||"";$("sha").value=c.apk_sha256||"";$("na").value=c.note_ar||"";$("ne").value=c.note_en||"";}
+ const {data:ms}=await sb.from("noor_messages").select("*").order("id",{ascending:false}).limit(10);
+ $("msgs").innerHTML=(ms||[]).map(x=>`<div class="muted">#${x.id} ${x.active?"فعّالة":"متوقفة"}: ${esc(x.body).slice(0,80)} <a href="#" data-m="${x.id}" data-a="${x.active}">${x.active?"إيقاف":"تفعيل"}</a></div>`).join("");
+ document.querySelectorAll("[data-m]").forEach(a=>a.onclick=async e=>{e.preventDefault();await sb.from("noor_messages").update({active:a.dataset.a!=="true"}).eq("id",a.dataset.m);load();});
+ const {data:er}=await sb.from("noor_errors").select("*").order("id",{ascending:false}).limit(50);
+ $("errs").innerHTML=(er||[]).length?`<table>${er.map(x=>`<tr><td>${new Date(x.created_at).toLocaleString("ar-EG")}<br>${esc(x.version_name)}<br>${esc(x.model)}</td><td dir="ltr">${esc(x.summary)}<pre>${esc(x.trace)}</pre></td></tr>`).join("")}</table>`:"<div class='muted'>لا توجد أخطاء</div>";
+}
+$("savecfg").onclick=async()=>{const u=$("url").value.trim();if(u&&!u.startsWith("https://")){$("cmsg").textContent="الرابط لازم https";return;}
+ const {error}=await sb.from("noor_config").update({latest_code:+$("lc").value||0,latest_name:$("ln").value,min_code:+$("mc").value||0,apk_url:u||null,apk_sha256:$("sha").value||null,note_ar:$("na").value,note_en:$("ne").value,updated_at:new Date().toISOString()}).eq("id",1);
+ $("cmsg").textContent=error?"فشل الحفظ":"تم الحفظ";};
+$("send").onclick=async()=>{const b=$("mb").value.trim();if(!b)return;const d=+$("md").value;
+ await sb.from("noor_messages").insert({title:$("mt").value||null,body:b,expires_at:d?new Date(Date.now()+d*864e5).toISOString():null});$("mb").value="";load();};
+show();
+</script></body></html>
