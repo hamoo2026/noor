@@ -562,7 +562,7 @@ async function update(){const v=$("#view");v.innerHTML=`<div class="card">${skel
   if(!/\.apk$/i.test(f.name)||f.size>50*1048576||f.size<100000){er.textContent="الملف لازم يكون APK بحجم صحيح (أقل من 50 ميجا)";er.classList.remove("hidden");return}
   let info;try{info=await apkInfo(await f.arrayBuffer())}catch(x){info=null}
   if(!info||!info.code||info.pkg!=="com.noorapp.noor"){er.textContent="تعذّر قراءة الملف أو أنه ليس تطبيق نور";er.classList.remove("hidden");return}
-  $("#lc").value=info.code;$("#ln").value=info.name||"";if((+$("#mc").value||0)>0)$("#mc").value=info.code;setKind();
+  $("#lc").value=info.code;$("#ln").value=info.name||"";$("#ln").dispatchEvent(new Event("input"));if((+$("#mc").value||0)>0)$("#mc").value=info.code;setKind();
   const ver=String(info.name||info.code).replace(/[^0-9A-Za-z._-]/g,"");
   $("#url").value="";$("#sha").value="";$("#dtxt").innerHTML='<div class="sk" style="height:12px;margin:6px auto;width:60%"></div>١/٢ جارٍ حساب البصمة...';
   try{if(!(window.crypto&&crypto.subtle))throw new Error("المتصفح لا يدعم حساب SHA-256 هنا. افتح الصفحة بـ https:// من Chrome");
