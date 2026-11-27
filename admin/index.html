@@ -303,6 +303,8 @@ if(DEMO){
    async contentUnpublish(id){window.__cp.find(z=>z.id===id).published=null;window.__cs.version++;return null},async contentDelete(id){window.__cp=window.__cp.filter(z=>z.id!==id);return null},
    async contentSaveSettings(s){window.__cs={...(await this.contentSettings()),...s};return null},
    async uploadMedia(blob,name,type){const u=BUCKET_URL+name;window.__media=window.__media||{};window.__media[u]=await new Promise(r=>{const fr=new FileReader();fr.onload=()=>r(fr.result);fr.readAsDataURL(blob)});return{url:u,error:null}},
+   async builtinList(){window.__bh=window.__bh||{regular_1:false,regular_2:false,fajr_1:false};return{rows:Object.entries(window.__bh).map(([key,hidden])=>({key,hidden}))}},
+   async builtinSet(key,hidden){window.__bh=window.__bh||{regular_1:false,regular_2:false,fajr_1:false};if(hidden){const kind=key==="fajr_1"?"fajr":"regular";const others=Object.entries(window.__bh).filter(([k,h])=>!h&&k!==key&&(k==="fajr_1"?"fajr":"regular")===kind).length+(window.__ad||[]).filter(z=>z.active&&z.kind===kind).length;if(!others)return{message:"at least one adhan must stay visible"}}window.__bh[key]=hidden;return null},
    async adhanList(){return{rows:(window.__ad=window.__ad||[]).slice().sort((x,y)=>x.sort-y.sort)}},
    async adhanAdd(r){window.__ad=window.__ad||[];window.__ad.push({id:"demo-"+Math.random().toString(36).slice(2,9),...r});return null},
    async adhanUpdate(id,p){Object.assign(window.__ad.find(z=>z.id===id),p);return null},async adhanDelete(r){window.__ad=window.__ad.filter(z=>z.id!==r.id);return null},
@@ -348,6 +350,8 @@ if(DEMO){
    async messages(){return ck(await sb.from("noor_messages").select("*").order("id",{ascending:false}).limit(100))},
    async addMessage(m){return (await sb.from("noor_messages").insert(m)).error},
    async setMessage(id,p){return (await sb.from("noor_messages").update(p).eq("id",id)).error},
+   async builtinList(){const r=await sb.from("noor_adhan_builtin").select("*");return r.error?{error:r.error}:{rows:r.data||[]}},
+   async builtinSet(key,hidden){return (await sb.from("noor_adhan_builtin").update({hidden}).eq("key",key)).error},
    async adhanList(){const r=await sb.from("noor_adhan_sounds").select("*").order("sort",{ascending:true}).order("created_at",{ascending:true});return r.error?{error:r.error}:{rows:r.data||[]}},
    async adhanAdd(r){return (await sb.from("noor_adhan_sounds").insert(r)).error},
    async adhanUpdate(id,p){return (await sb.from("noor_adhan_sounds").update(p).eq("id",id)).error},
@@ -806,14 +810,18 @@ async function adhan(){const v=$("#view");v.innerHTML="";
     a.preload="metadata";a.onloadedmetadata=()=>fin(isFinite(a.duration)?Math.round(a.duration):0);a.onerror=()=>fin(-1);setTimeout(()=>fin(0),6000);a.src=u});
   const load=async()=>{const b=$("#adlist");if(!b)return;let l;try{l=await api.adhanList()}catch(e){b.innerHTML='<div class="hint">تعذر تحميل القائمة</div>';return}
    if(l.error){b.innerHTML='<div class="hint">تعذر تحميل القائمة: '+esc(l.error.message||"")+'</div>';return}
-   const rows=l.rows;const bi=(t,h)=>`<div class="item" style="padding:10px 12px;margin:8px 0;display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap"><span><b>${t}</b> <span class="hint">${h}</span></span><span class="hint">للقراءة فقط</span></div>`;
-   const built=bi("الأذان 1","(مدمج في التطبيق)")+bi("الأذان 2","(مدمج في التطبيق)")+bi("أذان الفجر 1","(مدمج في التطبيق، للفجر)");
-   if(!rows.length){b.innerHTML=built+'<div class="hint" style="margin-top:8px">لا توجد أصوات مرفوعة بعد.</div>';return}
+   const rows=l.rows;
+   const BL=await api.builtinList();const bh={};((BL&&BL.rows)||[]).forEach(x=>bh[x.key]=x.hidden);const bmiss=!BL||BL.error;
+   const bi=(key,t,h)=>`<div class="item" style="padding:10px 12px;margin:8px 0;display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;${bh[key]?"opacity:.55":""}"><span><b>${t}</b> <span class="hint">${h}${bh[key]?" · مخفي من القائمة":""}</span></span>${bmiss?'<span class="hint">غير متاح (شغّل 015b)</span>':`<button class="btn ghost sm" data-b="${key}" type="button">${bh[key]?"إظهار":"إخفاء"}</button>`}</div>`;
+   const built=bi("regular_1","الأذان 1","(مدمج في التطبيق)")+bi("regular_2","الأذان 2","(مدمج في التطبيق)")+bi("fajr_1","أذان الفجر 1","(مدمج في التطبيق، للفجر)")+'<div class="hint" style="margin:4px 0 8px">الأذانات المدمجة ملفاتها داخل التطبيق، فيمكن إخفاؤها من القائمة فقط وليس حذفها. يتغير ذلك في التطبيقات بعد المزامنة التالية. يبقى دائمًا خيار واحد على الأقل.</div>';
+   const hookB=()=>b.querySelectorAll("[data-b]").forEach(x=>x.onclick=async()=>{const k=x.dataset.b,h=!bh[k];if(h&&!confirm("إخفاء هذا الأذان من قائمة الاختيار في التطبيقات؟ (لا يُحذف، ويمكنك إظهاره لاحقًا). من اختاره حاليًا يتحول لأول خيار ظاهر."))return;x.disabled=true;const e=await api.builtinSet(k,h);if(e)toast(/at least one/.test(e.message||"")?"لا يمكن إخفاء آخر خيار متاح لهذا النوع":"فشل: "+(e.message||e));load()});
+   if(!rows.length){b.innerHTML=built+'<div class="hint" style="margin-top:8px">لا توجد أصوات مرفوعة بعد.</div>';hookB();return}
    const cnt={regular:2,fajr:1};
    b.innerHTML=built+rows.map((r,i)=>{const n=r.active?(++cnt[r.kind]):null;
     return `<div class="item" style="padding:10px 12px;margin:8px 0;${r.active?"":"opacity:.55"}"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap"><span><b>${r.active?"الأذان "+n:"مخفي"}</b>${r.name_ar?" - "+esc(r.name_ar):""} <span class="hint">${r.kind==="fajr"?"فجر":"عادي"} · ${(r.size_bytes/1048576).toFixed(2)} ميجا${r.duration_s?" · "+r.duration_s+" ث":""}</span></span>
      <span style="display:flex;gap:6px"><button class="btn ghost sm" data-m="up" data-i="${i}" ${i===0?"disabled":""} type="button">▲</button><button class="btn ghost sm" data-m="dn" data-i="${i}" ${i===rows.length-1?"disabled":""} type="button">▼</button><button class="btn ghost sm" data-m="tg" data-i="${i}" type="button">${r.active?"إخفاء":"إظهار"}</button><button class="btn ghost sm" data-m="rm" data-i="${i}" type="button">حذف</button></span></div>
      <audio controls preload="none" src="${esc(r.url)}" style="width:100%;margin-top:8px"></audio>${r.license?`<div class="hint" style="margin-top:4px">المصدر: ${esc(r.license)}</div>`:""}</div>`}).join("");
+   hookB();
    b.querySelectorAll("[data-m]").forEach(btn=>btn.onclick=async()=>{const i=+btn.dataset.i,m=btn.dataset.m,r=rows[i];btn.disabled=true;let e=null;
     if(m==="tg")e=await api.adhanUpdate(r.id,{active:!r.active});
     else if(m==="rm"){if(!confirm("حذف هذا الصوت نهائيًا؟ سيختفي من التطبيقات عند التحديث التالي، ومن اختاره يرجع للأذان المدمج."))return load();e=await api.adhanDelete(r)}
