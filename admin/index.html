@@ -303,6 +303,10 @@ if(DEMO){
    async contentUnpublish(id){window.__cp.find(z=>z.id===id).published=null;window.__cs.version++;return null},async contentDelete(id){window.__cp=window.__cp.filter(z=>z.id!==id);return null},
    async contentSaveSettings(s){window.__cs={...(await this.contentSettings()),...s};return null},
    async uploadMedia(blob,name,type){const u=BUCKET_URL+name;window.__media=window.__media||{};window.__media[u]=await new Promise(r=>{const fr=new FileReader();fr.onload=()=>r(fr.result);fr.readAsDataURL(blob)});return{url:u,error:null}},
+   async adhanList(){return{rows:(window.__ad=window.__ad||[]).slice().sort((x,y)=>x.sort-y.sort)}},
+   async adhanAdd(r){window.__ad=window.__ad||[];window.__ad.push({id:"demo-"+Math.random().toString(36).slice(2,9),...r});return null},
+   async adhanUpdate(id,p){Object.assign(window.__ad.find(z=>z.id===id),p);return null},async adhanDelete(r){window.__ad=window.__ad.filter(z=>z.id!==r.id);return null},
+   async uploadAdhan(f,name,type){return{url:"data:"+type+";name="+name+";base64,"+await new Promise(r=>{const fr=new FileReader();fr.onload=()=>r(fr.result.split(",")[1]);fr.readAsDataURL(f)}),error:null}},
    async config(){return{...cfg}},async saveConfig(c){cfg={...cfg,...c};return null},
    async deviceVer(ids){return devs.filter(d=>ids.includes(d.install_id)).map(d=>({install_id:d.install_id,version_code:d.version_code}))},async targets(){return(window.__tg=window.__tg||[]).slice()},async setTarget(r){window.__tg=(window.__tg||[]).filter(x=>x.install_id!==r.install_id);window.__tg.push({...r,created_at:new Date().toISOString()});return null},async delTarget(id){window.__tg=(window.__tg||[]).filter(x=>x.install_id!==id);return null},
    async messages(){return msgs.slice()},async addMessage(m){msgs.unshift({id:Date.now(),created_at:new Date().toISOString(),active:true,...m});return null},
@@ -344,6 +348,14 @@ if(DEMO){
    async messages(){return ck(await sb.from("noor_messages").select("*").order("id",{ascending:false}).limit(100))},
    async addMessage(m){return (await sb.from("noor_messages").insert(m)).error},
    async setMessage(id,p){return (await sb.from("noor_messages").update(p).eq("id",id)).error},
+   async adhanList(){const r=await sb.from("noor_adhan_sounds").select("*").order("sort",{ascending:true}).order("created_at",{ascending:true});return r.error?{error:r.error}:{rows:r.data||[]}},
+   async adhanAdd(r){return (await sb.from("noor_adhan_sounds").insert(r)).error},
+   async adhanUpdate(id,p){return (await sb.from("noor_adhan_sounds").update(p).eq("id",id)).error},
+   async adhanDelete(r){const e=(await sb.from("noor_adhan_sounds").delete().eq("id",r.id)).error;if(e)return e;
+    try{const ss=(await sb.auth.getSession()).data.session;const n=decodeURIComponent((r.url||"").split("/").pop());if(ss&&n)await fetch(URL_+"/storage/v1/object/noor-adhan/"+encodeURIComponent(n),{method:"DELETE",headers:{Authorization:"Bearer "+ss.access_token,apikey:KEY}})}catch(x){}return null},
+   async uploadAdhan(blob,name,type){const ss=(await sb.auth.getSession()).data.session;if(!ss)return{error:{message:"انتهت الجلسة، سجّل الدخول من جديد"}};
+    try{const r=await fetch(URL_+"/storage/v1/object/noor-adhan/"+encodeURIComponent(name),{method:"POST",headers:{Authorization:"Bearer "+ss.access_token,apikey:KEY,"content-type":type,"cache-control":"max-age=31536000"},body:blob});
+     if(!r.ok){let m="";try{m=(await r.json()).message||""}catch(e){}return{error:{message:"رفض الخادم الرفع ("+r.status+") "+m}}}return{url:URL_+"/storage/v1/object/public/noor-adhan/"+name,error:null}}catch(e){return{error:{message:"فشل الاتصال بالخادم أثناء الرفع"}}}},
    async delMessage(id){return (await sb.from("noor_messages").delete().eq("id",id)).error},
    async uploadApk(f,name,onp,reg){const ss=(await sb.auth.getSession()).data.session;if(!ss)return{error:{message:"انتهت الجلسة، سجّل الدخول من جديد ثم أعد الرفع"}};
     return await new Promise(res=>{const x=new XMLHttpRequest();x.open("POST",URL_+"/storage/v1/object/noor-apk/"+encodeURIComponent(name));
@@ -520,6 +532,48 @@ async function update(){const v=$("#view");v.innerHTML=`<div class="card">${skel
    $("#psend").disabled=true;const r=await api.push(aud==="all"?"all":pick.install_id,t,m);$("#psend").disabled=false;
    if(r.ok){toast("تم إرسال الإشعار");loadLog()}else pe("لم يُرسل: "+(why[r.error]||r.detail||r.error||"خطأ غير معروف"))};
   loadLog()})();
+ (()=>{const box=document.createElement("div");box.className="card";box.style.marginTop="16px";box.id="adhancard";
+  box.innerHTML='<h3>أصوات الأذان</h3><div class="sub">ارفع صوت أذان جديد فيظهر في التطبيق بعد الأذانات المدمجة بأرقام 3 و4 و5 وهكذا، وكل مستخدم يختار الصوت الذي يريده. لا يحتاج إصدارًا جديدًا من التطبيق، لكن يظهر فقط للنسخ التي تدعم الميزة (0.12.1 فما فوق). الحد الأقصى 4 ميجا للملف و20 صوتًا نشطًا.</div>'+
+   '<label>ملف الصوت (mp3 أو m4a أو aac أو ogg أو wav)</label><input id="adf" type="file" accept="audio/*,.mp3,.m4a,.aac,.ogg,.wav">'+
+   '<label>الاسم (اختياري)</label><input id="adn" maxlength="60" placeholder="اتركه فارغًا ليظهر «الأذان N» فقط">'+
+   '<label>النوع</label><div class="seg" id="adk"><button type="button" data-k="regular" class="on">للظهر والعصر والمغرب والعشاء</button><button type="button" data-k="fajr">أذان فجر</button></div>'+
+   '<label>المصدر أو الترخيص (اختياري)</label><input id="adl" maxlength="300" placeholder="ملاحظة لك فقط، لا تظهر للمستخدمين">'+
+   '<div id="aderr" class="err hidden"></div><div style="margin-top:12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap"><button class="btn" id="adup" type="button">رفع الصوت</button><span class="hint" id="adst"></span></div>'+
+   '<h3 style="font-size:var(--t3);margin-top:18px">الأصوات المرفوعة</h3><div id="adlist">'+skel(2)+'</div>';
+  v.appendChild(box);
+  const AD_MIME={mp3:"audio/mpeg",m4a:"audio/mp4",aac:"audio/aac",ogg:"audio/ogg",wav:"audio/wav"};
+  let kind="regular";const ae=m=>{const e=$("#aderr");e.textContent=m||"";e.classList.toggle("hidden",!m)};
+  document.querySelectorAll("#adk button").forEach(b=>b.onclick=()=>{kind=b.dataset.k;document.querySelectorAll("#adk button").forEach(x=>x.classList.toggle("on",x===b))});
+  const hex=buf=>[...new Uint8Array(buf)].map(x=>x.toString(16).padStart(2,"0")).join("");
+  const dur=f=>new Promise(res=>{const u=URL.createObjectURL(f),a=new Audio();let done=false;const fin=x=>{if(done)return;done=true;URL.revokeObjectURL(u);res(x)};
+    a.preload="metadata";a.onloadedmetadata=()=>fin(isFinite(a.duration)?Math.round(a.duration):0);a.onerror=()=>fin(-1);setTimeout(()=>fin(0),6000);a.src=u});
+  const load=async()=>{const b=$("#adlist");if(!b)return;let l;try{l=await api.adhanList()}catch(e){b.innerHTML='<div class="hint">تعذر تحميل القائمة</div>';return}
+   if(l.error){b.innerHTML='<div class="hint">تعذر تحميل القائمة: '+esc(l.error.message||"")+'</div>';return}
+   const rows=l.rows;if(!rows.length){b.innerHTML='<div class="hint">لا توجد أصوات مرفوعة بعد.</div>';return}
+   const cnt={regular:2,fajr:1};
+   b.innerHTML=rows.map((r,i)=>{const n=r.active?(++cnt[r.kind]):null;
+    return `<div class="item" style="padding:10px 12px;margin:8px 0;${r.active?"":"opacity:.55"}"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap"><span><b>${r.active?"الأذان "+n:"مخفي"}</b>${r.name_ar?" - "+esc(r.name_ar):""} <span class="hint">${r.kind==="fajr"?"فجر":"عادي"} · ${(r.size_bytes/1048576).toFixed(2)} ميجا${r.duration_s?" · "+r.duration_s+" ث":""}</span></span>
+     <span style="display:flex;gap:6px"><button class="btn ghost sm" data-m="up" data-i="${i}" ${i===0?"disabled":""} type="button">▲</button><button class="btn ghost sm" data-m="dn" data-i="${i}" ${i===rows.length-1?"disabled":""} type="button">▼</button><button class="btn ghost sm" data-m="tg" data-i="${i}" type="button">${r.active?"إخفاء":"إظهار"}</button><button class="btn ghost sm" data-m="rm" data-i="${i}" type="button">حذف</button></span></div>
+     <audio controls preload="none" src="${esc(r.url)}" style="width:100%;margin-top:8px"></audio>${r.license?`<div class="hint" style="margin-top:4px">المصدر: ${esc(r.license)}</div>`:""}</div>`}).join("");
+   b.querySelectorAll("[data-m]").forEach(btn=>btn.onclick=async()=>{const i=+btn.dataset.i,m=btn.dataset.m,r=rows[i];btn.disabled=true;let e=null;
+    if(m==="tg")e=await api.adhanUpdate(r.id,{active:!r.active});
+    else if(m==="rm"){if(!confirm("حذف هذا الصوت نهائيًا؟ سيختفي من التطبيقات عند التحديث التالي، ومن اختاره يرجع للأذان المدمج."))return load();e=await api.adhanDelete(r)}
+    else{const j=m==="up"?i-1:i+1;if(j<0||j>=rows.length)return load();e=await api.adhanUpdate(rows[i].id,{sort:j})||await api.adhanUpdate(rows[j].id,{sort:i});
+     for(let k=0;!e&&k<rows.length;k++)if(k!==i&&k!==j&&rows[k].sort!==k)e=await api.adhanUpdate(rows[k].id,{sort:k})}
+    if(e)toast("فشل: "+(e.message||e));load()})};
+  $("#adup").onclick=async()=>{ae("");const f=$("#adf").files[0];if(!f){ae("اختر ملف صوت");return}
+   const ext=(f.name.split(".").pop()||"").toLowerCase();if(!AD_MIME[ext]){ae("نوع الملف غير مدعوم. المسموح: mp3 و m4a و aac و ogg و wav");return}
+   if(f.size>4194304){ae("الملف أكبر من 4 ميجا ("+(f.size/1048576).toFixed(1)+" ميجا)");return}if(f.size<1000){ae("الملف صغير جدًا");return}
+   $("#adup").disabled=true;const st=$("#adst");st.textContent="جارٍ الفحص...";
+   try{const d=await dur(f);if(d<0&&!confirm("تعذر فحص الملف على هذا الجهاز (قد يكون غير صالح كصوت). هل ترفعه على أي حال؟")){return}if(d>360){ae("مدة الصوت أطول من 6 دقائق");return}
+    const sha=hex(await crypto.subtle.digest("SHA-256",await f.arrayBuffer()));const nm="a-"+Date.now().toString(36)+Math.random().toString(36).slice(2,7)+"."+ext;
+    st.textContent="جارٍ الرفع...";const u=await api.uploadAdhan(f,nm,AD_MIME[ext]);if(u.error){ae(u.error.message||"فشل الرفع");return}
+    const rows=(await api.adhanList()).rows||[];
+    const e=await api.adhanAdd({name_ar:$("#adn").value.trim()||null,kind,url:u.url,sha256:sha,size_bytes:f.size,duration_s:d>0?d:null,license:$("#adl").value.trim()||null,active:true,sort:rows.length});
+    if(e){ae("تم رفع الملف لكن فشل الحفظ: "+(e.message||e));return}
+    toast("تم رفع الصوت");$("#adf").value="";$("#adn").value="";$("#adl").value="";load()}
+   catch(x){ae("حدث خطأ: "+(x.message||x))}finally{$("#adup").disabled=false;st.textContent=""}};
+  load()})();
  (()=>{const box=document.createElement("div");box.className="card";box.style.marginTop="16px";box.id="rollout";
   box.innerHTML='<h3>من حدّث ومن لم يحدّث</h3><div class="sub">حسب آخر إصدار منشور ('+esc(c.latest_name||"")+" · "+esc(c.latest_code)+')</div><div id="rob">'+skel(3)+"</div>";v.appendChild(box);
   (async()=>{const b=$("#rob");if(!b)return;let tgs=new Set();try{tgs=new Set((await api.targets()).map(t=>t.install_id))}catch(e){}
