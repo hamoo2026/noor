@@ -148,6 +148,7 @@ bdi,.mono{unicode-bidi:isolate}
 .drawer header h2{margin:0;font-size:var(--t3);flex:1}
 .drawer .body{padding:16px 18px;overflow:auto;flex:1}
 .kv{display:grid;grid-template-columns:120px 1fr;gap:10px 12px;font-size:var(--t4)}.kv dt{color:var(--mut)}.kv dd{margin:0;word-break:break-all}
+
 /* command palette */
 .cmd{position:fixed;inset:0;z-index:70;background:rgba(0,0,0,.55);display:flex;justify-content:center;align-items:flex-start;padding-top:12vh}
 .cmd .box{width:min(560px,92vw);background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:var(--sh3);overflow:hidden;animation:rise .18s var(--ease)}
@@ -240,7 +241,7 @@ html.app .toast{bottom:calc(92px + env(safe-area-inset-bottom))}
 <div class="shell"><aside class="side" id="side"><div class="brand"><div class="logo"><svg width="24" height="24" viewBox="0 0 72 72" fill="none" stroke="#d8bb6c" stroke-width="3"><path d="M36 6l8 20 20 8-20 8-8 20-8-20-20-8 20-8z"/></svg></div><div><b>نور</b><small>لوحة المطور</small></div></div>
 <nav id="tabs" aria-label="التنقل الرئيسي"></nav>
 <div class="sidefoot"><button class="iconbtn" id="theme" aria-label="تبديل الوضع"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z"/></svg><span>الوضع</span></button>
-<button class="iconbtn" id="out"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 4h4v16h-4M10 8l-4 4 4 4M6 12h10"/></svg><span>خروج</span></button></div></aside>
+<button class="iconbtn" id="sec" aria-label="الأمان"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/></svg><span>الأمان</span></button><button class="iconbtn" id="out"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 4h4v16h-4M10 8l-4 4 4 4M6 12h10"/></svg><span>خروج</span></button></div></aside>
 <div class="content"><header class="top2"><h1 id="ttl">نظرة عامة</h1><span class="hint" id="upd"></span>
 <button class="iconbtn cmdk" id="cmdk" aria-label="بحث وأوامر"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg><span>بحث وأوامر</span><kbd>Ctrl K</kbd></button>
 <button class="iconbtn" id="refresh" aria-label="تحديث"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 11a8 8 0 10-2.3 5.7M20 4v7h-7"/></svg></button></header>
@@ -291,7 +292,7 @@ if(DEMO){
    async deviceErrors(id){return[]},
    async errors(){return errRows.slice().reverse()},async signOut(){location.search=""}};
 }else{
-  const {createClient}=await import("https://esm.sh/@supabase/supabase-js@2");
+  const {createClient}=await import("./vendor/supabase-js-2.119.2.mjs");
   sb=createClient(URL_,KEY);
   const ck=r=>{if(r.error)throw r.error;return r.data};
   api={user:"",
@@ -349,7 +350,7 @@ const TABS=[["overview","نظرة عامة"],["devices","الأجهزة"],["upda
 const ICO={overview:"M4 13h6V4H4zM14 20h6V4h-6zM4 20h6v-4H4z",devices:"M7 3h10a1 1 0 011 1v16a1 1 0 01-1 1H7a1 1 0 01-1-1V4a1 1 0 011-1zM11 18h2",update:"M12 3v12m0 0l-4-4m4 4l4-4M5 20h14",errors:"M12 3l10 18H2zM12 10v5M12 18h.01",messages:"M4 5h16v11H9l-5 4z"};
 let cur=(TABS.find(t=>t[0]===location.hash.slice(1))||TABS[0])[0];
 function renderTabs(){$("#ttl").textContent=(TABS.find(t=>t[0]===cur)||[0,""])[1];history.replaceState(null,"","#"+cur+location.search);$("#tabs").innerHTML=TABS.map(([k,l])=>`<button class="tab ${k===cur?"on":""}" data-t="${k}" ${k===cur?'aria-current="page"':""}><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="${ICO[k]}"/></svg><span>${l}</span></button>`).join("");document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{cur=b.dataset.t;go()});document.querySelector(".tab.on")?.scrollIntoView({inline:"center",block:"nearest"})}
-function go(){renderTabs();({overview,devices,update,messages,errors})[cur]();window.scrollTo({top:0})}
+function go(){renderTabs();({overview,devices,update,messages,errors,security})[cur]();window.scrollTo({top:0})}
 
 async function overview(){await overview0();decorateOverview();try{await extras()}catch(e){}}
 async function overview0(){const v=$("#view");v.innerHTML=`<div class="grid kpis">${Array(6).fill('<div class="card">'+skel(3)+"</div>").join("")}</div><div class="card" style="margin-top:14px">${skel(6)}</div>`;
@@ -528,11 +529,45 @@ try{const t=localStorage.getItem("noor_admin_theme");if(t)document.documentEleme
 $("#theme").onclick=toggleTheme;
 
 /* ---------- boot / auth ---------- */
+
+/* ---- 2-step login (TOTP) ---- */
+async function aal(){try{const r=await sb.auth.mfa.getAuthenticatorAssuranceLevel();return r.data||{}}catch(e){return{}}}
+function mfaPrompt(){
+ $("#login").classList.add("hidden");$("#app").classList.add("hidden");
+ let m=$("#mfa");if(!m){m=document.createElement("section");m.id="mfa";m.className="login";document.body.appendChild(m)}
+ m.classList.remove("hidden");
+ m.innerHTML=`<div class="lbox"><form id="mf" class="card"><h3>التحقق بخطوتين</h3><div class="sub">اكتب الرمز المكوّن من 6 أرقام من تطبيق المصادقة.</div>
+ <label for="mc">الرمز</label><input id="mc" class="ltr" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" required>
+ <div id="mer" class="err hidden"></div><div style="margin-top:16px;display:flex;gap:8px"><button class="btn" id="mgo" style="flex:1">تأكيد</button><button class="btn ghost" id="mx" type="button">خروج</button></div></form></div>`;
+ $("#mc").focus();
+ $("#mx").onclick=async()=>{await sb.auth.signOut();m.classList.add("hidden");boot()};
+ $("#mf").onsubmit=async e=>{e.preventDefault();const b=$("#mgo");b.disabled=true;$("#mer").classList.add("hidden");
+  try{const f=(await sb.auth.mfa.listFactors()).data;const t=(f.totp||[])[0];if(!t)throw new Error("no factor");
+   const c=await sb.auth.mfa.challenge({factorId:t.id});if(c.error)throw c.error;
+   const v=await sb.auth.mfa.verify({factorId:t.id,challengeId:c.data.id,code:$("#mc").value.trim()});if(v.error)throw v.error;
+   m.classList.add("hidden");boot()}
+  catch(x){b.disabled=false;$("#mer").textContent="الرمز غير صحيح أو انتهت صلاحيته. جرّب رمزًا جديدًا.";$("#mer").classList.remove("hidden");$("#mc").select()}}}
+async function security(){const v=$("#view");v.innerHTML=`<div class="card">${skel(5)}</div>`;
+ if(DEMO){v.innerHTML=`<div class="card"><h3>التحقق بخطوتين</h3><p class="hint">غير متاح في العرض التجريبي.</p></div>`;return}
+ let fs=[],lv={};try{fs=((await sb.auth.mfa.listFactors()).data||{}).totp||[];lv=await aal()}catch(e){}
+ const on=fs[0];
+ v.innerHTML=`<div class="card"><h3>التحقق بخطوتين (TOTP)</h3><div class="sub">يحمي حساب المطور حتى لو سُرقت كلمة المرور. يعمل مع Google Authenticator أو Microsoft Authenticator أو أي تطبيق مماثل.</div>
+ <p><span class="pill ${on?"ok":"bad"}">${on?"مفعّل":"غير مفعّل"}</span> <span class="hint">${on?"مستوى هذه الجلسة: "+esc(lv.currentLevel||"?"):"الحساب الآن بكلمة مرور فقط"}</span></p>
+ ${on?`<div style="margin-top:12px"><button class="btn danger sm" id="mdel">إيقاف التحقق بخطوتين</button></div><p class="hint">للإيقاف لازم تكون الجلسة موثّقة بالرمز.</p>`:`<div id="men"><button class="btn" id="mst">تفعيل الآن</button><p class="hint">قبل البدء: افتح تطبيق المصادقة على جوالك. سيظهر رمز QR ومفتاح نصي، احفظ المفتاح النصي في مكان آمن لاستعادة الدخول لو ضاع الجوال.</p></div>`}</div>`;
+ const del=$("#mdel");if(del)del.onclick=async()=>{if(!confirm("إيقاف التحقق بخطوتين؟ سيصبح الحساب بكلمة مرور فقط."))return;const r=await sb.auth.mfa.unenroll({factorId:on.id});if(r.error)toast("فشل: "+r.error.message);else{toast("تم الإيقاف");security()}};
+ const st=$("#mst");if(st)st.onclick=async()=>{st.disabled=true;const r=await sb.auth.mfa.enroll({factorType:"totp",friendlyName:"Noor Admin "+new Date().toISOString().slice(0,10)});
+  if(r.error){toast("فشل: "+r.error.message);st.disabled=false;return}
+  const d=r.data;$("#men").innerHTML=`<p>1) امسح الرمز بتطبيق المصادقة:</p><div style="background:#fff;padding:10px;border-radius:14px;width:max-content;max-width:100%"><img alt="QR" src="${esc(d.totp.qr_code)}" width="200" height="200"></div>
+  <p>أو أدخل هذا المفتاح يدويًا (احفظه):</p><div class="mono ltr" style="word-break:break-all;padding:10px;border:1px dashed var(--line);border-radius:12px;user-select:all">${esc(d.totp.secret)}</div>
+  <label for="ec">2) اكتب الرمز الحالي من التطبيق</label><input id="ec" class="ltr" inputmode="numeric" maxlength="6" autocomplete="one-time-code"><div id="eer" class="err hidden"></div>
+  <div style="margin-top:14px"><button class="btn" id="ego">تأكيد وتفعيل</button></div>`;
+  $("#ego").onclick=async()=>{const b=$("#ego");b.disabled=true;try{const c=await sb.auth.mfa.challenge({factorId:d.id});if(c.error)throw c.error;const vv=await sb.auth.mfa.verify({factorId:d.id,challengeId:c.data.id,code:$("#ec").value.trim()});if(vv.error)throw vv.error;toast("تم تفعيل التحقق بخطوتين");security()}catch(x){b.disabled=false;$("#eer").textContent="الرمز غير صحيح. تأكد من الوقت على جوالك وجرّب مرة أخرى.";$("#eer").classList.remove("hidden")}}}}
+$("#sec").onclick=()=>{cur="security";go()};
 async function boot(){
  if(DEMO){$("#demoBar").classList.remove("hidden");$("#login").classList.add("hidden");$("#app").classList.remove("hidden");go();const q=location.search;if(/open=drawer/.test(q))setTimeout(()=>document.querySelector("tr[data-i]")?.click(),700);if(/open=cmd/.test(q))setTimeout(openCmd,500);return}
  const {data:{session}}=await sb.auth.getSession();
  $("#login").classList.toggle("hidden",!!session);$("#app").classList.toggle("hidden",!session);
- if(session)go();
+ if(session){const a=await aal();if(a.nextLevel==="aal2"&&a.currentLevel!=="aal2"){mfaPrompt();return}go()}
 }
 $("#lf").onsubmit=async e=>{e.preventDefault();const b=$("#lgo");b.disabled=true;b.textContent="جارٍ الدخول...";$("#lerr").classList.add("hidden");
  const {error}=await sb.auth.signInWithPassword({email:$("#em").value.trim(),password:$("#pw").value});b.disabled=false;b.textContent="دخول";
