@@ -4,7 +4,7 @@
 <meta name="robots" content="noindex,nofollow"><meta name="theme-color" content="#0a1411">
 <title>نور | لوحة المطور</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&family=Amiri:wght@700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&family=Amiri:wght@700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <style>
 :root{--in:#0b1713;--item:#0e1c17;--pre:#08110e;--trk:#0c1814;--thbg:#0f1f19;--sk1:#10201a;--sk2:#18302a;--sh1:0 1px 2px rgba(0,0,0,.25);--sh2:0 8px 24px rgba(0,0,0,.28);--sh3:0 24px 60px rgba(0,0,0,.5);--bg:#0a1411;--bg2:#0f1d18;--card:#12221c;--card2:#162a23;--line:#254036;--gold:#d8bb6c;--gold2:#f0dc9c;--txt:#f3ecd8;--mut:#9fb0a5;--ok:#5fd39a;--warn:#f0b35a;--bad:#ef6f6f;--blue:#6fb4e8;--r:18px}
 *{box-sizing:border-box}html{-webkit-text-size-adjust:100%}
@@ -174,6 +174,57 @@ html.still *,html.still *::before,html.still *::after{animation:none!important;t
 @font-face{font-family:"Twemoji Country Flags";unicode-range:U+1F1E6-1F1FF,U+1F3F4,U+E0062-E007F;src:url("https://cdn.jsdelivr.net/npm/country-flag-emoji-polyfill@0.1.8/dist/TwemojiCountryFlags.woff2") format("woff2");font-display:swap}
 .flag{font-family:"Twemoji Country Flags","Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",sans-serif;font-size:17px;line-height:1;margin-inline-end:6px;vertical-align:-2px}
 .cc{font-size:11px;color:var(--mut);direction:ltr;unicode-bidi:isolate;margin-inline-start:6px;border:1px solid var(--line);border-radius:5px;padding:0 4px}
+
+/* ===== polish layer: touch, type, depth, motion ===== */
+:root{--mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;--ease2:cubic-bezier(.2,.8,.2,1)}
+html.app{--bg:#070d14;--bg2:#0b1420;--card:#0d1824;--card2:#112030;--line:#1c2e40;--in:#09121c;--item:#0b1622;--pre:#060c13;--trk:#0a141e;--thbg:#0c1926;--sk1:#0d1824;--sk2:#16283a;--gold:#4fd1c5;--gold2:#9af0e6;--txt:#e8f1f7;--mut:#8aa0b2;--ok:#4ade80;--blue:#7cc4ff}
+html.app body{background:radial-gradient(900px 520px at 90% -8%,#11304a 0,transparent 60%),radial-gradient(700px 420px at -10% 108%,#0c2a2c 0,transparent 55%),var(--bg)}
+html.app body::before{opacity:.035}
+html.app .top,html.app .top2{background:rgba(7,13,20,.86)}
+html.app .side{background:rgba(7,13,20,.94)}
+html.app .logo{border-color:var(--gold);background:linear-gradient(145deg,#0f2b3d,#08121b);box-shadow:0 0 24px rgba(79,209,197,.2)}
+html.app .btn{background:linear-gradient(180deg,#6be3d7,#2fb3a6);color:#031412;box-shadow:0 8px 22px rgba(79,209,197,.22)}
+html.app .toast{background:#0f2a36;border-color:var(--gold)}
+html.app .kpi.hl{border-color:rgba(79,209,197,.55);box-shadow:0 0 30px rgba(79,209,197,.09) inset}
+html.app .bars .t i{background:linear-gradient(90deg,#1f8f86,var(--gold))}
+html.app .seg button.on{color:#031412}
+html.app .tab.on{color:var(--gold2)}
+.card{border-radius:20px;box-shadow:0 1px 0 rgba(255,255,255,.04) inset,0 10px 30px rgba(0,0,0,.25)}
+.card::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:linear-gradient(180deg,rgba(255,255,255,.035),transparent 38%)}
+.card h3{letter-spacing:.2px;font-weight:700}
+.kpi .v,.mono,.bars .n,td.num{font-family:var(--mono);font-variant-numeric:tabular-nums;letter-spacing:-.5px}
+.kpi .l{font-weight:600;letter-spacing:.2px}
+.kpi .v{font-weight:700}
+input,select,textarea{min-height:48px;font-size:16px;border-radius:14px}
+textarea{min-height:96px}
+.btn{min-height:48px;border-radius:14px;letter-spacing:.2px;transition:transform .12s var(--ease2),filter .15s}
+.btn:active{transform:scale(.97)}
+.btn.sm{min-height:40px;padding:8px 14px}
+.iconbtn{min-height:44px;min-width:44px;border-radius:14px;transition:transform .12s var(--ease2),border-color .15s}
+.iconbtn:active{transform:scale(.94)}
+.seg button{min-height:40px;padding:8px 14px}
+.tab{min-height:46px}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+#view>*{animation:rise .38s var(--ease2) both}
+#view>*:nth-child(2){animation-delay:.04s}#view>*:nth-child(3){animation-delay:.08s}#view>*:nth-child(4){animation-delay:.12s}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.empty{padding:34px 16px;text-align:center;color:var(--mut)}
+.card.empty .e{width:64px;height:64px;margin:0 auto 12px;border-radius:50%;display:grid;place-items:center;font-size:28px;color:var(--gold2);border:1px solid var(--line);background:radial-gradient(circle at 30% 30%,var(--card2),var(--card))}
+.pill{font-family:var(--mono);font-size:11.5px;letter-spacing:.3px}
+.hint{line-height:1.7}
+table{font-variant-numeric:tabular-nums}
+.tplrow button{min-height:38px}
+@media(max-width:900px){
+ .side{border-radius:22px 22px 0 0;box-shadow:0 -10px 40px rgba(0,0,0,.45)}
+ .tab{min-height:54px;justify-content:center;border-radius:16px}
+ .tab.on{background:linear-gradient(180deg,rgba(255,255,255,.07),rgba(255,255,255,.02));box-shadow:0 0 0 1px var(--line) inset}
+ main{padding-bottom:110px}
+ .top2{padding:12px 14px;padding-top:max(12px,env(safe-area-inset-top))}
+ .card{padding:16px}
+ .kpi .v{font-size:27px}
+}
+html.app .btn.ghost{background:transparent;color:var(--gold2);border:1px solid var(--line);box-shadow:none}html.app .btn.danger{background:transparent;color:var(--bad);border:1px solid #6b3434;box-shadow:none}
+html.app .toast{bottom:calc(92px + env(safe-area-inset-bottom))}
 </style></head><body>
 <div id="demoBar" class="demo hidden">وضع العرض التجريبي: بيانات وهمية محلية، لا يتم الاتصال بقاعدة البيانات ولا الكتابة فيها</div>
 
@@ -199,6 +250,7 @@ html.still *,html.still *::before,html.still *::after{animation:none!important;t
 <div id="cmd" class="cmd hidden"><div class="box" role="dialog" aria-label="بحث وأوامر"><input id="cmi" placeholder="اكتب أمرًا أو ابحث عن جهاز..." aria-label="بحث وأوامر" autocomplete="off"><ul id="cml" role="listbox"></ul></div></div>
 
 <script type="module">
+if(/NoorAdminApp/.test(navigator.userAgent)||/[?&]app=1/.test(location.search))document.documentElement.classList.add("app");
 const DEMO=new URLSearchParams(location.search).get("demo")==="1";if(/still=1/.test(location.search))document.documentElement.classList.add("still");
 const URL_="https://mzrbmjknvvckygwrzpnc.supabase.co",KEY="sb_publishable_ztRXdKMTVRcgmFhS22QnrA_D3OOr9nB";
 const $=s=>document.querySelector(s);
@@ -257,7 +309,7 @@ if(DEMO){
    async uploadApk(f,name){const r=await sb.storage.from("noor-apk").upload(name,f,{upsert:true,contentType:"application/vnd.android.package-archive",cacheControl:"60"});if(r.error)return{error:r.error};return{url:sb.storage.from("noor-apk").getPublicUrl(name).data.publicUrl+"?v="+Date.now(),error:null}},
    async deviceErrors(id){return ck(await sb.from("noor_errors").select("id,created_at,summary,version_name").eq("install_id",id).order("id",{ascending:false}).limit(20))},
    async errors(){return ck(await sb.from("noor_errors").select("*").order("id",{ascending:false}).limit(100))},
-   async signOut(){await sb.auth.signOut();boot()}};
+   async signOut(){await sb.auth.signOut();try{if(window.NoorApp&&NoorApp.wipe){NoorApp.wipe();return}}catch(e){}boot()}};
 }
 
 async function apkInfo(buf){const dv=new DataView(buf),u8=new Uint8Array(buf);let e=-1;for(let i=buf.byteLength-22;i>=Math.max(0,buf.byteLength-70000);i--)if(dv.getUint32(i,true)===0x06054b50){e=i;break}
@@ -299,7 +351,7 @@ let cur=(TABS.find(t=>t[0]===location.hash.slice(1))||TABS[0])[0];
 function renderTabs(){$("#ttl").textContent=(TABS.find(t=>t[0]===cur)||[0,""])[1];history.replaceState(null,"","#"+cur+location.search);$("#tabs").innerHTML=TABS.map(([k,l])=>`<button class="tab ${k===cur?"on":""}" data-t="${k}" ${k===cur?'aria-current="page"':""}><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="${ICO[k]}"/></svg><span>${l}</span></button>`).join("");document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{cur=b.dataset.t;go()});document.querySelector(".tab.on")?.scrollIntoView({inline:"center",block:"nearest"})}
 function go(){renderTabs();({overview,devices,update,messages,errors})[cur]();window.scrollTo({top:0})}
 
-async function overview(){await overview0();decorateOverview()}
+async function overview(){await overview0();decorateOverview();try{await extras()}catch(e){}}
 async function overview0(){const v=$("#view");v.innerHTML=`<div class="grid kpis">${Array(6).fill('<div class="card">'+skel(3)+"</div>").join("")}</div><div class="card" style="margin-top:14px">${skel(6)}</div>`;
  let s;try{s=await api.stats()}catch(e){v.innerHTML=errBox(e);return}
  $("#upd").textContent="آخر تحديث "+new Date().toLocaleTimeString("ar-EG-u-nu-latn",{hour:"2-digit",minute:"2-digit"});window.__stats=s;
@@ -313,6 +365,30 @@ async function overview0(){const v=$("#view");v.innerHTML=`<div class="grid kpis
  <div class="card"><h3>توزيع الإصدارات</h3><div class="sub">نسبة الأجهزة على كل إصدار</div>${donut(s.versions,s.total)}</div></div>
  <div class="grid g3" style="margin-top:14px"><div class="card"><h3>أندرويد</h3><div class="sub">إصدارات النظام</div>${bars(s.androids,s.total)}</div><div class="card"><h3>أكثر الأجهزة</h3><div class="sub">موديل الموبايل</div>${bars(s.models,s.total)}</div><div class="card"><h3>اللغة</h3><div class="sub">لغة النظام على الجهاز</div>${bars(s.langs,s.total)}</div></div>
  <p class="hint" style="margin-top:14px">«أونلاين» = التطبيق مفتوح على الشاشة الآن: نسخة 0.10.2 فأحدث ترسل نبضة كل 4 دقائق وهو مفتوح، وتُحسب أونلاين إذا كانت آخر نبضة قبل أقل من 6 دقائق. النسخ الأقدم لا ترسل نبضة أثناء الاستخدام، فتُحسب أونلاين 20 دقيقة فقط بعد فتحها. «غير نشط» = لم يظهر منذ أكثر من 7 أيام. الإحصاء مجهول بالكامل.</p>`}
+
+
+/* ---- extras: since-last-visit, release adoption, countries ---- */
+const verKey=v=>String(v||"").split(".").map(x=>+x||0).reduce((a,x)=>a*1000+x,0);
+async function extras(){const s=window.__stats;const v=$("#view");if(!s||!s.total||!v)return;
+ const box=document.createElement("div");box.id="xtra";
+ // adoption of the newest version
+ const vs=(s.versions||[]).slice().sort((a,b)=>verKey(b.v)-verKey(a.v));const top=vs[0];
+ const adopt=top?Math.round(top.n/s.total*100):0;const older=top?s.total-top.n:0;
+ let html=`<div class="grid g2" style="margin-top:14px"><div class="card"><h3>تبنّي أحدث إصدار</h3><div class="sub">كم جهاز وصل لآخر نسخة مسجلة (${esc(top?top.v:"-")})</div>
+  <div style="font-size:34px;font-weight:800;margin:6px 0">${adopt}%</div><div class="t" style="height:10px;border-radius:6px;background:var(--line);overflow:hidden"><i style="display:block;height:100%;width:${adopt}%;background:var(--ok,#3fb97f)"></i></div>
+  <p class="hint">${nf(top?top.n:0)} جهاز على الأحدث، و ${nf(older)} على نسخ أقدم${older?" (يستحقون التحديث)":""}.</p></div>
+  <div class="card"><h3>الدول</h3><div class="sub">حسب بلد الاتصال (أول 1000 جهاز)</div><div id="ctry">${skel(4)}</div></div></div>`;
+ box.innerHTML=html;v.appendChild(box);
+ try{const r=await api.devices({q:"",version:"",status:"",sort:"last_seen",asc:false,page:0,size:1000});const m={};let known=0;r.rows.forEach(d=>{if(d.country){m[d.country]=(m[d.country]||0)+1;known++}});
+  const arr=Object.entries(m).sort((a,b)=>b[1]-a[1]).slice(0,8);const el=$("#ctry");
+  if(el)el.innerHTML=arr.length?arr.map(([c,n])=>`<div class="row" style="display:flex;gap:8px;align-items:center;margin:6px 0">${flag(c)}<span style="flex:1">${esc(cname(c))} <span class="hint">${esc(c)}</span></span><b>${nf(n)}</b><span class="hint">${Math.round(n/Math.max(1,known)*100)}%</span></div>`).join("")+`<p class="hint">${nf(r.rows.length-known)} جهاز بدون دولة بعد (تظهر عند أول نبضة).</p>`:'<div class="empty">لا بيانات دولة بعد</div>'}catch(e){}
+ // since last visit + milestones (stored only in this browser/app)
+ try{const k="noor_admin_lv";let o=JSON.parse(localStorage.getItem(k)||"null");if(DEMO&&/lv=1/.test(location.search))o={t:Date.now()-5*36e5,total:Math.max(0,s.total-12)};const now=Date.now();let errs=[];try{errs=await api.errors()}catch(e){}
+  if(o&&o.t){const nd=s.total-o.total,ne=errs.filter(e=>new Date(e.created_at).getTime()>o.t).length;const ms=[10,25,50,100,250,500,1000,2500,5000,10000,25000,50000,100000].filter(m=>o.total<m&&s.total>=m);
+   const ago=Math.max(1,Math.round((now-o.t)/6e4));const when=ago<60?ago+" دقيقة":ago<1440?Math.round(ago/60)+" ساعة":Math.round(ago/1440)+" يوم";
+   if(nd>0||ne>0||ms.length){const b=document.createElement("div");b.className="card";b.style.marginTop="14px";b.innerHTML=`<h3>منذ آخر زيارة (قبل ${when})</h3><p style="margin:6px 0">${nd>0?"+"+nf(nd)+" جهاز جديد":"لا أجهزة جديدة"} · ${ne?"+"+nf(ne)+" خطأ جديد":"لا أخطاء جديدة"}</p>${ms.length?`<p style="color:var(--ok,#3fb97f);font-weight:700">★ وصل التطبيق إلى ${nf(ms[ms.length-1])} جهاز</p>`:""}`;v.insertBefore(b,v.firstChild)}}
+  if(!DEMO)localStorage.setItem(k,JSON.stringify({t:now,total:s.total}))}catch(e){}
+}
 
 const D={q:"",version:"",status:"",sort:"last_seen",asc:false,page:0,size:25};
 async function devices(){const v=$("#view");const st=await api.stats().catch(()=>null);const vs=(st?.versions||[]).map(x=>x.v);
@@ -374,6 +450,8 @@ const mstat=m=>!m.active?["off","متوقفة"]:m.expires_at&&new Date(m.expires
 async function messages(){const v=$("#view");v.innerHTML=`<div class="card">${skel(8)}</div>`;let list;try{list=await api.messages()}catch(e){v.innerHTML=errBox(e);return}
  const loc=d=>{const z=new Date(d.getTime()-d.getTimezoneOffset()*6e4);return z.toISOString().slice(0,16)};
  v.innerHTML=`<div class="grid gs"><div class="card"><h3>رسالة جديدة</h3><div class="sub">تظهر مرة واحدة لكل مستخدم في نافذة داخل التطبيق.</div>
+
+ <div class="sub">قوالب سريعة:</div><div id="tpls" style="display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 10px">${[["تحديث جديد","يوجد إصدار جديد من التطبيق فيه تحسينات. حدّث من قسم المزيد."],["شكر","شكرًا لاستخدامك نور. دعواتكم."],["صيانة","نعمل على تحسين الخدمة وقد تتأخر بعض الميزات قليلًا."],["إصلاح","تم إصلاح مشكلة ظهرت في الإصدار السابق، يرجى التحديث."]].map((t,i)=>`<button class="btn ghost sm" data-tpl="${i}" type="button">${t[0]}</button>`).join("")}</div>
  <label>العنوان (اختياري)</label><input id="mt" maxlength="80"><label>نص الرسالة</label><textarea id="mb" maxlength="600" rows="4"></textarea><div class="hint" dir="ltr" style="text-align:end"><span id="cc">0</span> / 600</div>
  <div class="row2"><div><label>تبدأ في</label><input id="ms" type="datetime-local" class="ltr" value="${loc(new Date())}"></div><div><label>تنتهي بعد</label><select id="me"><option value="0">بدون انتهاء</option><option value="1">يوم</option><option value="3">3 أيام</option><option value="7" selected>7 أيام</option><option value="30">30 يومًا</option></select></div></div>
  <div id="merr" class="err hidden"></div><div style="margin-top:16px"><button class="btn" id="mp">نشر الرسالة</button></div></div>
@@ -381,6 +459,8 @@ async function messages(){const v=$("#view");v.innerHTML=`<div class="card">${sk
  <div class="card" style="margin-top:14px"><h3>الرسائل السابقة</h3><div class="sub">الرسالة المجدولة لا تظهر قبل موعدها، ويمكن إيقافها في أي وقت.</div><div id="ml">${list.length?list.map(m=>{const [c,l]=mstat(m);return`<div class="item"><div class="h"><span class="pill ${c}">${l}</span><b>${esc(m.title||"بدون عنوان")}</b><span class="sp"></span><span class="hint">${fdt(m.starts_at)}${m.expires_at?" → "+fdt(m.expires_at):""}</span></div><div style="margin:8px 0;color:var(--mut);white-space:pre-wrap">${esc(m.body)}</div><div style="display:flex;gap:8px"><button class="btn ghost sm" data-a="${m.id}" data-v="${m.active}">${m.active?"إيقاف":"تفعيل"}</button><button class="btn danger sm" data-d="${m.id}">حذف</button></div></div>`}).join(""):'<div class="empty"><div class="e">✉</div>لا توجد رسائل بعد</div>'}</div></div>`;
  const pv=()=>{$("#mpv").innerHTML=`<div class="preview"><h4>${esc($("#mt").value||"رسالة من المطور")}</h4><p>${esc($("#mb").value)||"نص الرسالة يظهر هنا"}</p><div class="acts"><span>حسنًا</span></div></div>`;$("#cc").textContent=$("#mb").value.length};
  ["mt","mb"].forEach(i=>$("#"+i).oninput=pv);pv();
+ const TP=[["تحديث جديد","يوجد إصدار جديد من التطبيق فيه تحسينات. حدّث من قسم المزيد."],["شكر","شكرًا لاستخدامك نور. دعواتكم."],["صيانة","نعمل على تحسين الخدمة وقد تتأخر بعض الميزات قليلًا."],["إصلاح","تم إصلاح مشكلة ظهرت في الإصدار السابق، يرجى التحديث."]];
+ document.querySelectorAll("[data-tpl]").forEach(b=>b.onclick=()=>{const t=TP[+b.dataset.tpl];$("#mt").value=t[0];$("#mb").value=t[1];pv()});
  $("#mp").onclick=async()=>{const b=$("#mb").value.trim(),er=$("#merr");er.classList.add("hidden");if(!b){er.textContent="اكتب نص الرسالة";er.classList.remove("hidden");return}
   const st=new Date($("#ms").value);if(isNaN(st)){er.textContent="موعد البدء غير صحيح";er.classList.remove("hidden");return}
   const d=+$("#me").value;$("#mp").disabled=true;const e=await api.addMessage({title:$("#mt").value.trim()||null,body:b,starts_at:st.toISOString(),expires_at:d?new Date(st.getTime()+d*864e5).toISOString():null});$("#mp").disabled=false;
@@ -432,7 +512,7 @@ $("#scrim").onclick=closeDrawer;
 /* csv */
 async function exportCsv(){try{const r=await api.devices({...D,page:0,size:1000});const q=v=>'"'+String(v??"").replace(/"/g,'""').replace(/^([=+\-@])/,"'$1")+'"';
  const rows=[["install_id","model","country","version_name","version_code","android","lang","first_seen","last_seen"],...r.rows.map(d=>[d.install_id,d.model,d.country,d.version_name,d.version_code,d.android,d.lang,d.first_seen,d.last_seen])];
- const blob=new Blob(["\ufeff"+rows.map(a=>a.map(q).join(",")).join("\r\n")],{type:"text/csv;charset=utf-8"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="noor-devices-"+new Date().toISOString().slice(0,10)+".csv";a.click();setTimeout(()=>URL.revokeObjectURL(a.href),4000);toast("تم تصدير "+nf(r.rows.length)+" جهاز"+(r.total>r.rows.length?" من "+nf(r.total):""))}catch(e){toast("فشل التصدير: "+(e.message||e))}}
+ const csv="\ufeff"+rows.map(a=>a.map(q).join(",")).join("\r\n");const fn="noor-devices-"+new Date().toISOString().slice(0,10)+".csv";if(window.NoorApp&&NoorApp.saveCsv){NoorApp.saveCsv(fn,csv);toast("تم حفظ الملف في التنزيلات");return}const blob=new Blob([csv],{type:"text/csv;charset=utf-8"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="noor-devices-"+new Date().toISOString().slice(0,10)+".csv";a.click();setTimeout(()=>URL.revokeObjectURL(a.href),4000);toast("تم تصدير "+nf(r.rows.length)+" جهاز"+(r.total>r.rows.length?" من "+nf(r.total):""))}catch(e){toast("فشل التصدير: "+(e.message||e))}}
 /* command palette */
 function closeCmd(){$("#cmd").classList.add("hidden")}
 function openCmd(){const m=$("#cmd");m.classList.remove("hidden");const i=$("#cmi");
