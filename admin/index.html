@@ -307,7 +307,14 @@ if(DEMO){
    async addMessage(m){return (await sb.from("noor_messages").insert(m)).error},
    async setMessage(id,p){return (await sb.from("noor_messages").update(p).eq("id",id)).error},
    async delMessage(id){return (await sb.from("noor_messages").delete().eq("id",id)).error},
-   async uploadApk(f,name){const r=await sb.storage.from("noor-apk").upload(name,f,{upsert:true,contentType:"application/vnd.android.package-archive",cacheControl:"60"});if(r.error)return{error:r.error};return{url:sb.storage.from("noor-apk").getPublicUrl(name).data.publicUrl+"?v="+Date.now(),error:null}},
+   async uploadApk(f,name,onp,reg){const ss=(await sb.auth.getSession()).data.session;if(!ss)return{error:{message:"انتهت الجلسة، سجّل الدخول من جديد ثم أعد الرفع"}};
+    return await new Promise(res=>{const x=new XMLHttpRequest();x.open("POST",URL_+"/storage/v1/object/noor-apk/"+encodeURIComponent(name));
+     x.setRequestHeader("Authorization","Bearer "+ss.access_token);x.setRequestHeader("apikey",KEY);x.setRequestHeader("x-upsert","true");x.setRequestHeader("cache-control","max-age=60");x.setRequestHeader("content-type","application/vnd.android.package-archive");
+     x.timeout=600000;let last=Date.now();const dog=setInterval(()=>{if(Date.now()-last>90000){clearInterval(dog);x.abort();res({error:{message:"الرفع واقف من أكثر من 90 ثانية (النت ضعيف أو الصفحة اتقفلت في الخلفية). أعد المحاولة وخلّي الصفحة مفتوحة"}})}},5000);
+     x.upload.onprogress=e=>{last=Date.now();if(onp&&e.lengthComputable)onp(e.loaded,e.total)};
+     x.onload=()=>{clearInterval(dog);if(x.status>=200&&x.status<300)res({url:URL_+"/storage/v1/object/public/noor-apk/"+encodeURIComponent(name)+"?v="+Date.now(),error:null});else{let m="";try{m=JSON.parse(x.responseText).message||""}catch(e){}res({error:{message:"رفض الخادم الرفع ("+x.status+") "+m}})}};
+     x.onerror=()=>{clearInterval(dog);res({error:{message:"فشل الاتصال بالخادم أثناء الرفع"}})};x.ontimeout=()=>{clearInterval(dog);res({error:{message:"انتهت مهلة الرفع (10 دقائق)"}})};x.onabort=()=>{clearInterval(dog)};
+     if(reg)reg(()=>{clearInterval(dog);x.abort();res({error:{message:"تم إلغاء الرفع"}})});x.send(f)})},
    async deviceErrors(id){return ck(await sb.from("noor_errors").select("id,created_at,summary,version_name").eq("install_id",id).order("id",{ascending:false}).limit(20))},
    async errors(){return ck(await sb.from("noor_errors").select("*").order("id",{ascending:false}).limit(100))},
    async signOut(){await sb.auth.signOut();try{if(window.NoorApp&&NoorApp.wipe){NoorApp.wipe();return}}catch(e){}boot()}};
@@ -435,11 +442,17 @@ async function update(){const v=$("#view");v.innerHTML=`<div class="card">${skel
   if(!info||!info.code||info.pkg!=="com.noorapp.noor"){er.textContent="تعذّر قراءة الملف أو أنه ليس تطبيق نور";er.classList.remove("hidden");return}
   $("#lc").value=info.code;$("#ln").value=info.name||"";if((+$("#mc").value||0)>0)$("#mc").value=info.code;setKind();
   const ver=String(info.name||info.code).replace(/[^0-9A-Za-z._-]/g,"");
-  $("#dtxt").innerHTML='<div class="sk" style="height:12px;margin:6px auto;width:60%"></div>جارٍ حساب البصمة والرفع...';
-  try{const buf=await f.arrayBuffer();const h=[...new Uint8Array(await crypto.subtle.digest("SHA-256",buf))].map(b=>b.toString(16).padStart(2,"0")).join("");
-   const r=await api.uploadApk(f,"noor-"+ver+".apk");if(r.error)throw r.error;$("#sha").value=h;$("#url").value=r.url;
+  $("#url").value="";$("#sha").value="";$("#dtxt").innerHTML='<div class="sk" style="height:12px;margin:6px auto;width:60%"></div>١/٢ جارٍ حساب البصمة...';
+  try{if(!(window.crypto&&crypto.subtle))throw new Error("المتصفح لا يدعم حساب SHA-256 هنا. افتح الصفحة بـ https:// من Chrome");
+   const buf=await f.arrayBuffer();const h=[...new Uint8Array(await crypto.subtle.digest("SHA-256",buf))].map(b=>b.toString(16).padStart(2,"0")).join("");
+   $("#sha").value=h;
+   $("#dtxt").innerHTML='٢/٢ جارٍ الرفع... <b id="pct">0%</b> <button type="button" class="btn ghost" id="cx" style="padding:4px 10px;margin-inline-start:8px">إلغاء</button><div class="hint">البصمة جاهزة: '+h.slice(0,12)+'...</div>';
+   window.__up=1;try{localStorage.setItem("noor_up",JSON.stringify({n:f.name,t:Date.now()}))}catch(e){}
+   try{if(navigator.wakeLock)window.__wl=await navigator.wakeLock.request("screen")}catch(e){}
+   let cancel=null;$("#cx").onclick=ev=>{ev.stopPropagation();if(cancel)cancel()};
+   const r=await api.uploadApk(f,"noor-"+ver+".apk",(l,t)=>{const p=$("#pct");if(p)p.textContent=Math.round(l*100/t)+"%"},c=>{cancel=c});window.__up=0;try{localStorage.removeItem("noor_up");window.__wl&&window.__wl.release()}catch(e){}if(r.error)throw r.error;$("#url").value=r.url;
    $("#dtxt").innerHTML='<b style="color:var(--ok)">تم الرفع</b><div class="hint">'+esc(f.name)+" · "+(f.size/1048576).toFixed(1)+" ميجا · SHA-256 "+h.slice(0,12)+"...</div>";toast("تم رفع الملف. اضغط حفظ ونشر لإظهار التحديث للمستخدمين")}
-  catch(x){$("#dtxt").textContent="اضغط لاختيار ملف APK";er.textContent="فشل الرفع: "+(x.message||x);er.classList.remove("hidden")}};
+  catch(x){window.__up=0;try{localStorage.removeItem("noor_up");window.__wl&&window.__wl.release()}catch(e){}$("#dtxt").textContent="اضغط لاختيار ملف APK";er.textContent="فشل الرفع: "+(x.message||x);er.classList.remove("hidden")}};
  $("#sv").onclick=async()=>{const u=$("#url").value.trim(),sh=$("#sha").value.trim(),er=$("#cerr");er.classList.add("hidden");
   const bad=(u&&!/^https:\/\//.test(u))?"الرابط لازم يبدأ بـ https://":(u&&!/^[0-9a-fA-F]{64}$/.test(sh))?"بصمة SHA-256 لازم تكون 64 حرفًا":(u&&!(+$("#lc").value>0))?"رقم الإصدار (versionCode) لازم يكون أكبر من صفر، وإلا لن يظهر التحديث. ارفع الـ APK ليتعبّى تلقائيًا":(+$("#lc").value>0&&!u)?"أدخل رابط الـ APK":"";
   if(bad){er.textContent=bad;er.classList.remove("hidden");return}
@@ -572,7 +585,8 @@ async function boot(){
 $("#lf").onsubmit=async e=>{e.preventDefault();const b=$("#lgo");b.disabled=true;b.textContent="جارٍ الدخول...";$("#lerr").classList.add("hidden");
  const {error}=await sb.auth.signInWithPassword({email:$("#em").value.trim(),password:$("#pw").value});b.disabled=false;b.textContent="دخول";
  if(error){$("#lerr").textContent="فشل الدخول. تأكد من البريد وكلمة المرور.";$("#lerr").classList.remove("hidden")}else boot()};
-$("#out").onclick=()=>api.signOut();$("#refresh").onclick=()=>go();
-if(!DEMO)sb.auth.onAuthStateChange((ev)=>{if(ev==="SIGNED_OUT")boot()});
+$("#out").onclick=()=>api.signOut();$("#refresh").onclick=()=>{if(window.__up&&!confirm("الرفع شغال. التحديث هيلغيه. متأكد؟"))return;go()};
+if(!DEMO)sb.auth.onAuthStateChange((ev)=>{if(ev==="SIGNED_OUT"){if(window.__up){toast("انتهت الجلسة أثناء الرفع. سجّل الدخول وأعد الرفع");return}boot()}});
 boot();
+try{const u=JSON.parse(localStorage.getItem("noor_up")||"null");if(u&&!window.__up){localStorage.removeItem("noor_up");setTimeout(()=>toast("آخر رفع ("+u.n+") اتقطع لأن الصفحة اتقفلت أثناءه. اختر الملف وأعد الرفع"),1200)}}catch(e){}
 </script></body></html>
