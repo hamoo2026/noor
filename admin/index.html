@@ -433,6 +433,22 @@ async function update(){const v=$("#view");v.innerHTML=`<div class="card">${skel
  const setKind=()=>{const f=(+$("#mc").value||0)>0;document.querySelectorAll("#kind button").forEach(b=>b.classList.toggle("on",(b.dataset.k==="force")===f));$("#kh").textContent=f?`إجباري لكل من إصداره أقل من ${$("#mc").value}`:"اختياري: يظهر مرة واحدة لكل مستخدم ويمكنه تأجيله.";$("#pv").innerHTML=prev(f)};
  const prev2=f=>`<div class="preview"><h4>إصدار جديد ${esc($("#ln").value||"")}</h4><p>${esc($("#na").value)||"يوجد إصدار أحدث من التطبيق."}</p><div class="acts">${f?"":"<span>لاحقًا</span>"}<span>تحميل</span></div></div>`;
  window.prev=prev2;
+ (()=>{const box=document.createElement("div");box.className="card";box.style.marginTop="16px";box.id="rollout";
+  box.innerHTML='<h3>من حدّث ومن لم يحدّث</h3><div class="sub">حسب آخر إصدار منشور ('+esc(c.latest_name||"")+" · "+esc(c.latest_code)+')</div><div id="rob">'+skel(3)+"</div>";v.appendChild(box);
+  (async()=>{const b=$("#rob");if(!b)return;
+   if(!(+c.latest_code>0)||!c.apk_url){b.innerHTML='<p class="hint">لا يوجد تحديث منشور حاليًا، فلا توجد مقارنة.</p>';return}
+   let all=[];try{for(let pg=0;pg<5;pg++){const r=await api.devices({q:"",version:"",status:"",sort:"last_seen",asc:false,page:pg,size:1000});all=all.concat(r.rows);if(r.rows.length<1000)break}}catch(e){b.innerHTML=errBox(e);return}
+   const L=+c.latest_code,pub=c.updated_at?new Date(c.updated_at).getTime():0;
+   const up=all.filter(d=>+d.version_code>=L),old=all.filter(d=>+d.version_code<L);
+   const waiting=old.filter(d=>pub&&new Date(d.last_seen).getTime()<pub);
+   const pct=all.length?Math.round(up.length*100/all.length):0;
+   const row=(d,tag)=>`<div class="item" style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 12px;margin:6px 0"><div style="min-width:0"><div style="font-weight:700;overflow-wrap:anywhere">${esc(d.model||"?")}</div><div class="hint"><bdi class="mono">${esc(d.version_name||"?")} (${esc(d.version_code)})</bdi>${tag?" · "+tag:""}</div></div><div style="text-align:end;white-space:nowrap"><div>${ago(d.last_seen)}</div><div class="hint">${fdt(d.last_seen)}</div></div></div>`;
+   const tbl=(rows,tagf)=>rows.length?`<div style="max-height:60vh;overflow:auto">${rows.slice(0,100).map(d=>row(d,tagf?tagf(d):"")).join("")}</div>${rows.length>100?`<p class="hint">يعرض أحدث 100 من ${nf(rows.length)}. استخدم تبويب الأجهزة للبحث الكامل.</p>`:""}`:'<p class="hint">لا يوجد.</p>';
+   b.innerHTML=`<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px"><div class="kpi hl" style="padding:12px"><div class="l">حدّثوا</div><div class="v" style="font-size:28px">${nf(up.length)}</div></div><div class="kpi" style="padding:12px"><div class="l">لم يحدّثوا بعد</div><div class="v" style="font-size:28px">${nf(old.length)}</div></div><div class="kpi" style="padding:12px"><div class="l">النسبة</div><div class="v" style="font-size:28px">${nf(pct)}٪</div></div></div>
+   <p class="hint">«لم يحدّث بعد» قد يعني فقط أن الهاتف لم يتصل منذ النشر. الصفوف المؤشَّر عليها «لم يتصل منذ النشر» لا نعرف حالتها بعد. الأرقام من آخر إصدار مسجّل لكل جهاز، وتعتمد على ${nf(all.length)} جهازًا.</p>
+   <h3 style="margin-top:14px">حدّثوا (${nf(up.length)})</h3>${tbl(up,null)}
+   <h3 style="margin-top:14px">لم يحدّثوا بعد (${nf(old.length)})</h3>${tbl(old,d=>pub&&new Date(d.last_seen).getTime()<pub?"لم يتصل منذ النشر":"اتصل بعد النشر ولم يحدّث")}`;
+  })()})();
  document.querySelectorAll("#kind button").forEach(b=>b.onclick=()=>{$("#mc").value=b.dataset.k==="force"?($("#lc").value||0):0;setKind()});
  ["ln","na","lc"].forEach(i=>$("#"+i).oninput=()=>{if((+$("#mc").value||0)>0)$("#mc").value=$("#lc").value||0;setKind()});setKind();
  $("#drop").onclick=()=>$("#apkf").click();
