@@ -806,9 +806,11 @@ async function adhan(){const v=$("#view");v.innerHTML="";
     a.preload="metadata";a.onloadedmetadata=()=>fin(isFinite(a.duration)?Math.round(a.duration):0);a.onerror=()=>fin(-1);setTimeout(()=>fin(0),6000);a.src=u});
   const load=async()=>{const b=$("#adlist");if(!b)return;let l;try{l=await api.adhanList()}catch(e){b.innerHTML='<div class="hint">تعذر تحميل القائمة</div>';return}
    if(l.error){b.innerHTML='<div class="hint">تعذر تحميل القائمة: '+esc(l.error.message||"")+'</div>';return}
-   const rows=l.rows;if(!rows.length){b.innerHTML='<div class="hint">لا توجد أصوات مرفوعة بعد.</div>';return}
+   const rows=l.rows;const bi=(t,h)=>`<div class="item" style="padding:10px 12px;margin:8px 0;display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap"><span><b>${t}</b> <span class="hint">${h}</span></span><span class="hint">للقراءة فقط</span></div>`;
+   const built=bi("الأذان 1","(مدمج في التطبيق)")+bi("الأذان 2","(مدمج في التطبيق)")+bi("أذان الفجر 1","(مدمج في التطبيق، للفجر)");
+   if(!rows.length){b.innerHTML=built+'<div class="hint" style="margin-top:8px">لا توجد أصوات مرفوعة بعد.</div>';return}
    const cnt={regular:2,fajr:1};
-   b.innerHTML=rows.map((r,i)=>{const n=r.active?(++cnt[r.kind]):null;
+   b.innerHTML=built+rows.map((r,i)=>{const n=r.active?(++cnt[r.kind]):null;
     return `<div class="item" style="padding:10px 12px;margin:8px 0;${r.active?"":"opacity:.55"}"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap"><span><b>${r.active?"الأذان "+n:"مخفي"}</b>${r.name_ar?" - "+esc(r.name_ar):""} <span class="hint">${r.kind==="fajr"?"فجر":"عادي"} · ${(r.size_bytes/1048576).toFixed(2)} ميجا${r.duration_s?" · "+r.duration_s+" ث":""}</span></span>
      <span style="display:flex;gap:6px"><button class="btn ghost sm" data-m="up" data-i="${i}" ${i===0?"disabled":""} type="button">▲</button><button class="btn ghost sm" data-m="dn" data-i="${i}" ${i===rows.length-1?"disabled":""} type="button">▼</button><button class="btn ghost sm" data-m="tg" data-i="${i}" type="button">${r.active?"إخفاء":"إظهار"}</button><button class="btn ghost sm" data-m="rm" data-i="${i}" type="button">حذف</button></span></div>
      <audio controls preload="none" src="${esc(r.url)}" style="width:100%;margin-top:8px"></audio>${r.license?`<div class="hint" style="margin-top:4px">المصدر: ${esc(r.license)}</div>`:""}</div>`}).join("");
