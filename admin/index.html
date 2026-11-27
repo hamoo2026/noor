@@ -339,7 +339,7 @@ async function update(){const v=$("#view");v.innerHTML=`<div class="card">${skel
  <label>رفع ملف الـ APK</label>
  <div id="drop" class="item" style="border-style:dashed;text-align:center;cursor:pointer;padding:18px"><input id="apkf" type="file" accept=".apk,application/vnd.android.package-archive" class="hidden"><div id="dtxt">اضغط لاختيار ملف APK (حتى 50 ميجا)<div class="hint">يقرأ رقم الإصدار واسمه من الملف، ويحسب SHA-256، ثم يرفع ويملأ الرابط</div></div></div>
  <label>رابط ملف الـ APK (https فقط)</label><input id="url" class="ltr" placeholder="https://github.com/.../noor.apk" value="${esc(c.apk_url||"")}">
- <label>بصمة SHA-256 (اختياري)</label><input id="sha" class="ltr" value="${esc(c.apk_sha256||"")}">
+ <label>بصمة SHA-256 (مطلوبة)</label><input id="sha" class="ltr" value="${esc(c.apk_sha256||"")}">
  <div class="row2"><div><label>ملاحظة بالعربي</label><textarea id="na">${esc(c.note_ar||"")}</textarea></div><div><label>Note in English</label><textarea id="ne" class="ltr">${esc(c.note_en||"")}</textarea></div></div>
  <label>نوع التحديث</label><div class="seg" id="kind"><button type="button" data-k="opt">اختياري (مرة واحدة)</button><button type="button" data-k="force">إجباري (لا يُغلق)</button></div>
  <input id="mc" type="hidden" value="${esc(c.min_code)}"><div class="hint" id="kh"></div>
@@ -364,7 +364,7 @@ async function update(){const v=$("#view");v.innerHTML=`<div class="card">${skel
    $("#dtxt").innerHTML='<b style="color:var(--ok)">تم الرفع</b><div class="hint">'+esc(f.name)+" · "+(f.size/1048576).toFixed(1)+" ميجا · SHA-256 "+h.slice(0,12)+"...</div>";toast("تم رفع الملف. اضغط حفظ ونشر لإظهار التحديث للمستخدمين")}
   catch(x){$("#dtxt").textContent="اضغط لاختيار ملف APK";er.textContent="فشل الرفع: "+(x.message||x);er.classList.remove("hidden")}};
  $("#sv").onclick=async()=>{const u=$("#url").value.trim(),sh=$("#sha").value.trim(),er=$("#cerr");er.classList.add("hidden");
-  const bad=(u&&!/^https:\/\//.test(u))?"الرابط لازم يبدأ بـ https://":(sh&&!/^[0-9a-fA-F]{64}$/.test(sh))?"بصمة SHA-256 لازم تكون 64 حرفًا":(u&&!(+$("#lc").value>0))?"رقم الإصدار (versionCode) لازم يكون أكبر من صفر، وإلا لن يظهر التحديث. ارفع الـ APK ليتعبّى تلقائيًا":(+$("#lc").value>0&&!u)?"أدخل رابط الـ APK":"";
+  const bad=(u&&!/^https:\/\//.test(u))?"الرابط لازم يبدأ بـ https://":(u&&!/^[0-9a-fA-F]{64}$/.test(sh))?"بصمة SHA-256 لازم تكون 64 حرفًا":(u&&!(+$("#lc").value>0))?"رقم الإصدار (versionCode) لازم يكون أكبر من صفر، وإلا لن يظهر التحديث. ارفع الـ APK ليتعبّى تلقائيًا":(+$("#lc").value>0&&!u)?"أدخل رابط الـ APK":"";
   if(bad){er.textContent=bad;er.classList.remove("hidden");return}
   if((+$("#mc").value||0)>0&&!confirm("هذا تحديث إجباري ولن يستطيع المستخدمون المتأخرون إغلاقه. متأكد؟"))return;
   $("#sv").disabled=true;const e=await api.saveConfig({latest_code:+$("#lc").value||0,latest_name:$("#ln").value.trim(),min_code:+$("#mc").value||0,apk_url:u||null,apk_sha256:sh||null,note_ar:$("#na").value,note_en:$("#ne").value});$("#sv").disabled=false;
