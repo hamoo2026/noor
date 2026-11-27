@@ -481,6 +481,9 @@ async function update(){const v=$("#view");v.innerHTML=`<div class="card">${skel
  <div class="row2"><div><label>ملاحظة بالعربي</label><textarea id="na">${esc(c.note_ar||"")}</textarea></div><div><label>Note in English</label><textarea id="ne" class="ltr">${esc(c.note_en||"")}</textarea></div></div>
  <label>نوع التحديث</label><div class="seg" id="kind"><button type="button" data-k="opt">اختياري (مرة واحدة)</button><button type="button" data-k="force">إجباري (لا يُغلق)</button></div>
  <input id="mc" type="hidden" value="${esc(c.min_code)}"><div class="hint" id="kh"></div>
+ <div class="item" style="margin-top:14px;padding:12px 14px"><label style="display:flex;gap:10px;align-items:center;cursor:pointer;margin:0"><input type="checkbox" id="pon" checked style="width:auto"><b>إرسال إشعار للمستخدمين عند النشر</b></label>
+  <div id="pwrap"><label>نص الإشعار (تقدر تعدّله قبل النشر)</label><textarea id="ptxt" maxlength="200" rows="2"></textarea><div class="hint">يُرسل مرة واحدة لكل الأجهزة المسجلة عند ضغط «حفظ ونشر» فقط لو ده إصدار أحدث. لو شلت العلامة، يُنشر الإصدار بدون إشعار.</div></div>
+  <div id="pstat" class="hint" style="margin-top:6px"></div></div>
  <div id="cerr" class="err hidden"></div><div style="margin-top:16px;display:flex;gap:10px;align-items:center"><button class="btn" id="sv">حفظ ونشر</button><span class="hint" id="cmsg"></span></div></div>
  <div class="card"><h3>معاينة ما يراه المستخدم</h3><div class="sub">نافذة التحديث داخل التطبيق</div><div id="pv"></div>
  <p class="hint" style="margin-top:16px">التحديث الإجباري: يظهر لكل من إصداره أقل من «أقل إصدار مسموح» ولا يمكن إغلاقه حتى يحمّل. استخدمه فقط عند وجود خلل خطير. المستخدم يثبّت الملف بنفسه وأندرويد يتحقق من التوقيع.</p></div></div>`;
@@ -573,12 +576,30 @@ async function update(){const v=$("#view");v.innerHTML=`<div class="card">${skel
    const r=await api.uploadApk(f,nm,(l,t)=>{const p=$("#pct");if(p)p.textContent=Math.round(l*100/t)+"%"},c=>{cancel=c});window.__up=0;try{localStorage.removeItem("noor_up");window.__wl&&window.__wl.release()}catch(e){}if(r.error)throw r.error;$("#url").value=r.url;
    $("#dtxt").innerHTML='<b style="color:var(--ok)">تم الرفع</b><div class="hint">'+esc(f.name)+" · "+(f.size/1048576).toFixed(1)+" ميجا · SHA-256 "+h.slice(0,12)+"...</div>";toast("تم رفع الملف. اضغط حفظ ونشر لإظهار التحديث للمستخدمين")}
   catch(x){window.__up=0;try{localStorage.removeItem("noor_up");window.__wl&&window.__wl.release()}catch(e){}$("#dtxt").textContent="اضغط لاختيار ملف APK";er.textContent="فشل الرفع: "+(x.message||x);er.classList.remove("hidden")}};
+ const PUB={code:+c.latest_code||0,sent:new Set()};
+ const pmsg={too_fast:"استنى 20 ثانية بين كل إشعارين",server_not_configured:"الخادم لسه مش مجهّز لإرسال الإشعارات",forbidden:"الحساب ده مش أدمن",auth:"انتهت الجلسة، سجّل الدخول من جديد",offline:"مفيش اتصال"};
+ const sendPub=async(lcN)=>{const st=$("#pstat");if(PUB.sent.has(lcN)||PUB.busy)return;PUB.busy=true;const t=$("#ptxt").value.trim();
+  if(!t){PUB.busy=false;st.innerHTML='<b style="color:var(--bad,#e57373)">تم النشر لكن الإشعار لم يُرسل: النص فاضي.</b>';return}
+  st.textContent="جارٍ إرسال الإشعار...";let r;try{r=await api.push("all","تحديث جديد لتطبيق نور",t)}catch(x){r={ok:false,error:"offline"}}PUB.busy=false;
+  if(r&&r.ok){PUB.sent.add(lcN);st.innerHTML='<b style="color:var(--ok)">تم النشر وإرسال الإشعار.</b>';toast("اتبعت الإشعار للمستخدمين")}
+  else{st.innerHTML='<b style="color:var(--bad,#e57373)">تم نشر الإصدار لكن الإشعار لم يُرسل: '+esc(pmsg[r&&r.error]||(r&&(r.detail||r.error))||"خطأ غير معروف")+'</b> <button class="btn ghost sm" id="pre" type="button">إعادة إرسال الإشعار</button>';
+   $("#pre").onclick=()=>sendPub(lcN)}};
+ let ptEdited=false;const defTxt=()=>"إصدار جديد "+($("#ln").value.trim()||"")+" متاح، حدّث دلوقتي";
+ $("#ptxt").value=defTxt();$("#ptxt").oninput=()=>{ptEdited=true};$("#ln").addEventListener("input",()=>{if(!ptEdited)$("#ptxt").value=defTxt()});
+ $("#pon").onchange=()=>{$("#pwrap").classList.toggle("hidden",!$("#pon").checked)};
  $("#sv").onclick=async()=>{const u=$("#url").value.trim(),sh=$("#sha").value.trim(),er=$("#cerr");er.classList.add("hidden");
   const bad=(u&&!/^https:\/\//.test(u))?"الرابط لازم يبدأ بـ https://":(u&&!/^[0-9a-fA-F]{64}$/.test(sh))?"بصمة SHA-256 لازم تكون 64 حرفًا":(u&&!(+$("#lc").value>0))?"رقم الإصدار (versionCode) لازم يكون أكبر من صفر، وإلا لن يظهر التحديث. ارفع الـ APK ليتعبّى تلقائيًا":(+$("#lc").value>0&&!u)?"أدخل رابط الـ APK":"";
   if(bad){er.textContent=bad;er.classList.remove("hidden");return}
   if((+$("#mc").value||0)>0&&!confirm("هذا تحديث إجباري ولن يستطيع المستخدمون المتأخرون إغلاقه. متأكد؟"))return;
+  if($("#pon").checked&&u&&(+$("#lc").value||0)>PUB.code&&!PUB.sent.has(+$("#lc").value||0)&&!confirm("سيتم نشر الإصدار وإرسال إشعار لكل الأجهزة المسجلة. متأكد؟"))return;
   $("#sv").disabled=true;const e=await api.saveConfig({latest_code:+$("#lc").value||0,latest_name:$("#ln").value.trim(),min_code:+$("#mc").value||0,apk_url:u||null,apk_sha256:sh||null,note_ar:$("#na").value,note_en:$("#ne").value});$("#sv").disabled=false;
-  if(e){er.textContent="فشل الحفظ: "+e.message;er.classList.remove("hidden")}else{toast("تم الحفظ والنشر");$("#cmsg").textContent="آخر حفظ "+new Date().toLocaleTimeString("ar-EG-u-nu-latn")}}}
+  if(e){er.textContent="فشل الحفظ: "+e.message;er.classList.remove("hidden")}else{toast("تم الحفظ والنشر");$("#cmsg").textContent="آخر حفظ "+new Date().toLocaleTimeString("ar-EG-u-nu-latn");
+   const lcN=+$("#lc").value||0,isNew=!!u&&lcN>PUB.code;PUB.code=Math.max(PUB.code,lcN);
+   if(!$("#pon").checked){$("#pstat").innerHTML="تم النشر بدون إشعار (حسب اختيارك).";return}
+   if(!isNew){$("#pstat").innerHTML="تم الحفظ. لم يُرسل إشعار لأن ده مش إصدار أحدث من المنشور.";return}
+   if(PUB.sent.has(lcN)){$("#pstat").innerHTML="الإشعار لهذا الإصدار اتبعت قبل كده. لن يُرسل مرة تانية.";return}
+   await sendPub(lcN)}}}
+
 
 /* ---------- NOOR content (CMS) ---------- */
 const BUCKET_URL=URL_+"/storage/v1/object/public/noor-content/";
