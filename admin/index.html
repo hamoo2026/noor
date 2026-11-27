@@ -403,11 +403,11 @@ const skel=n=>Array.from({length:n},()=>'<div class="sk" style="margin:10px 0"><
 const errBox=e=>`<div class="err">تعذر تحميل البيانات: ${esc(e?.message||e)}<br><button class="btn ghost sm" style="margin-top:8px" onclick="location.reload()">إعادة المحاولة</button></div>`;
 
 /* ---------- views ---------- */
-const TABS=[["overview","نظرة عامة"],["devices","الأجهزة"],["update","الإصدارات والتحديث"],["errors","الأخطاء"],["messages","الرسائل"],["content","المحتوى"]];
-const ICO={overview:"M4 13h6V4H4zM14 20h6V4h-6zM4 20h6v-4H4z",devices:"M7 3h10a1 1 0 011 1v16a1 1 0 01-1 1H7a1 1 0 01-1-1V4a1 1 0 011-1zM11 18h2",update:"M12 3v12m0 0l-4-4m4 4l4-4M5 20h14",errors:"M12 3l10 18H2zM12 10v5M12 18h.01",messages:"M4 5h16v11H9l-5 4z",content:"M5 4h14v16H5zM8 9h8M8 13h8M8 17h5"};
+const TABS=[["overview","نظرة عامة"],["devices","الأجهزة"],["update","الإصدارات والتحديث"],["errors","الأخطاء"],["messages","الرسائل"],["content","المحتوى"],["adhan","أصوات الأذان"]];
+const ICO={overview:"M4 13h6V4H4zM14 20h6V4h-6zM4 20h6v-4H4z",devices:"M7 3h10a1 1 0 011 1v16a1 1 0 01-1 1H7a1 1 0 01-1-1V4a1 1 0 011-1zM11 18h2",update:"M12 3v12m0 0l-4-4m4 4l4-4M5 20h14",errors:"M12 3l10 18H2zM12 10v5M12 18h.01",messages:"M4 5h16v11H9l-5 4z",content:"M5 4h14v16H5zM8 9h8M8 13h8M8 17h5",adhan:"M9 18V6l10-2v12M9 18a3 3 0 11-6 0 3 3 0 016 0zM19 16a3 3 0 11-6 0 3 3 0 016 0z"};
 let cur=(TABS.find(t=>t[0]===location.hash.slice(1))||TABS[0])[0];
 function renderTabs(){$("#ttl").textContent=(TABS.find(t=>t[0]===cur)||[0,""])[1];history.replaceState(null,"","#"+cur+location.search);$("#tabs").innerHTML=TABS.map(([k,l])=>`<button class="tab ${k===cur?"on":""}" data-t="${k}" ${k===cur?'aria-current="page"':""}><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="${ICO[k]}"/></svg><span>${l}</span></button>`).join("");document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{cur=b.dataset.t;go()});document.querySelector(".tab.on")?.scrollIntoView({inline:"center",block:"nearest"})}
-function go(){renderTabs();({overview,devices,update,messages,errors,security,content})[cur]();window.scrollTo({top:0})}
+function go(){renderTabs();({overview,devices,update,messages,errors,security,content,adhan})[cur]();window.scrollTo({top:0})}
 
 async function overview(){await overview0();decorateOverview();try{await extras()}catch(e){}}
 async function overview0(){const v=$("#view");v.innerHTML=`<div class="grid kpis">${Array(6).fill('<div class="card">'+skel(3)+"</div>").join("")}</div><div class="card" style="margin-top:14px">${skel(6)}</div>`;
@@ -532,48 +532,6 @@ async function update(){const v=$("#view");v.innerHTML=`<div class="card">${skel
    $("#psend").disabled=true;const r=await api.push(aud==="all"?"all":pick.install_id,t,m);$("#psend").disabled=false;
    if(r.ok){toast("تم إرسال الإشعار");loadLog()}else pe("لم يُرسل: "+(why[r.error]||r.detail||r.error||"خطأ غير معروف"))};
   loadLog()})();
- (()=>{const box=document.createElement("div");box.className="card";box.style.marginTop="16px";box.id="adhancard";
-  box.innerHTML='<h3>أصوات الأذان</h3><div class="sub">ارفع صوت أذان جديد فيظهر في التطبيق بعد الأذانات المدمجة بأرقام 3 و4 و5 وهكذا، وكل مستخدم يختار الصوت الذي يريده. لا يحتاج إصدارًا جديدًا من التطبيق، لكن يظهر فقط للنسخ التي تدعم الميزة (0.12.1 فما فوق). الحد الأقصى 4 ميجا للملف و20 صوتًا نشطًا.</div>'+
-   '<label>ملف الصوت (mp3 أو m4a أو aac أو ogg أو wav)</label><input id="adf" type="file" accept="audio/*,.mp3,.m4a,.aac,.ogg,.wav">'+
-   '<label>الاسم (اختياري)</label><input id="adn" maxlength="60" placeholder="اتركه فارغًا ليظهر «الأذان N» فقط">'+
-   '<label>النوع</label><div class="seg" id="adk"><button type="button" data-k="regular" class="on">للظهر والعصر والمغرب والعشاء</button><button type="button" data-k="fajr">أذان فجر</button></div>'+
-   '<label>المصدر أو الترخيص (اختياري)</label><input id="adl" maxlength="300" placeholder="ملاحظة لك فقط، لا تظهر للمستخدمين">'+
-   '<div id="aderr" class="err hidden"></div><div style="margin-top:12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap"><button class="btn" id="adup" type="button">رفع الصوت</button><span class="hint" id="adst"></span></div>'+
-   '<h3 style="font-size:var(--t3);margin-top:18px">الأصوات المرفوعة</h3><div id="adlist">'+skel(2)+'</div>';
-  v.appendChild(box);
-  const AD_MIME={mp3:"audio/mpeg",m4a:"audio/mp4",aac:"audio/aac",ogg:"audio/ogg",wav:"audio/wav"};
-  let kind="regular";const ae=m=>{const e=$("#aderr");e.textContent=m||"";e.classList.toggle("hidden",!m)};
-  document.querySelectorAll("#adk button").forEach(b=>b.onclick=()=>{kind=b.dataset.k;document.querySelectorAll("#adk button").forEach(x=>x.classList.toggle("on",x===b))});
-  const hex=buf=>[...new Uint8Array(buf)].map(x=>x.toString(16).padStart(2,"0")).join("");
-  const dur=f=>new Promise(res=>{const u=URL.createObjectURL(f),a=new Audio();let done=false;const fin=x=>{if(done)return;done=true;URL.revokeObjectURL(u);res(x)};
-    a.preload="metadata";a.onloadedmetadata=()=>fin(isFinite(a.duration)?Math.round(a.duration):0);a.onerror=()=>fin(-1);setTimeout(()=>fin(0),6000);a.src=u});
-  const load=async()=>{const b=$("#adlist");if(!b)return;let l;try{l=await api.adhanList()}catch(e){b.innerHTML='<div class="hint">تعذر تحميل القائمة</div>';return}
-   if(l.error){b.innerHTML='<div class="hint">تعذر تحميل القائمة: '+esc(l.error.message||"")+'</div>';return}
-   const rows=l.rows;if(!rows.length){b.innerHTML='<div class="hint">لا توجد أصوات مرفوعة بعد.</div>';return}
-   const cnt={regular:2,fajr:1};
-   b.innerHTML=rows.map((r,i)=>{const n=r.active?(++cnt[r.kind]):null;
-    return `<div class="item" style="padding:10px 12px;margin:8px 0;${r.active?"":"opacity:.55"}"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap"><span><b>${r.active?"الأذان "+n:"مخفي"}</b>${r.name_ar?" - "+esc(r.name_ar):""} <span class="hint">${r.kind==="fajr"?"فجر":"عادي"} · ${(r.size_bytes/1048576).toFixed(2)} ميجا${r.duration_s?" · "+r.duration_s+" ث":""}</span></span>
-     <span style="display:flex;gap:6px"><button class="btn ghost sm" data-m="up" data-i="${i}" ${i===0?"disabled":""} type="button">▲</button><button class="btn ghost sm" data-m="dn" data-i="${i}" ${i===rows.length-1?"disabled":""} type="button">▼</button><button class="btn ghost sm" data-m="tg" data-i="${i}" type="button">${r.active?"إخفاء":"إظهار"}</button><button class="btn ghost sm" data-m="rm" data-i="${i}" type="button">حذف</button></span></div>
-     <audio controls preload="none" src="${esc(r.url)}" style="width:100%;margin-top:8px"></audio>${r.license?`<div class="hint" style="margin-top:4px">المصدر: ${esc(r.license)}</div>`:""}</div>`}).join("");
-   b.querySelectorAll("[data-m]").forEach(btn=>btn.onclick=async()=>{const i=+btn.dataset.i,m=btn.dataset.m,r=rows[i];btn.disabled=true;let e=null;
-    if(m==="tg")e=await api.adhanUpdate(r.id,{active:!r.active});
-    else if(m==="rm"){if(!confirm("حذف هذا الصوت نهائيًا؟ سيختفي من التطبيقات عند التحديث التالي، ومن اختاره يرجع للأذان المدمج."))return load();e=await api.adhanDelete(r)}
-    else{const j=m==="up"?i-1:i+1;if(j<0||j>=rows.length)return load();e=await api.adhanUpdate(rows[i].id,{sort:j})||await api.adhanUpdate(rows[j].id,{sort:i});
-     for(let k=0;!e&&k<rows.length;k++)if(k!==i&&k!==j&&rows[k].sort!==k)e=await api.adhanUpdate(rows[k].id,{sort:k})}
-    if(e)toast("فشل: "+(e.message||e));load()})};
-  $("#adup").onclick=async()=>{ae("");const f=$("#adf").files[0];if(!f){ae("اختر ملف صوت");return}
-   const ext=(f.name.split(".").pop()||"").toLowerCase();if(!AD_MIME[ext]){ae("نوع الملف غير مدعوم. المسموح: mp3 و m4a و aac و ogg و wav");return}
-   if(f.size>4194304){ae("الملف أكبر من 4 ميجا ("+(f.size/1048576).toFixed(1)+" ميجا)");return}if(f.size<1000){ae("الملف صغير جدًا");return}
-   $("#adup").disabled=true;const st=$("#adst");st.textContent="جارٍ الفحص...";
-   try{const d=await dur(f);if(d<0&&!confirm("تعذر فحص الملف على هذا الجهاز (قد يكون غير صالح كصوت). هل ترفعه على أي حال؟")){return}if(d>360){ae("مدة الصوت أطول من 6 دقائق");return}
-    const sha=hex(await crypto.subtle.digest("SHA-256",await f.arrayBuffer()));const nm="a-"+Date.now().toString(36)+Math.random().toString(36).slice(2,7)+"."+ext;
-    st.textContent="جارٍ الرفع...";const u=await api.uploadAdhan(f,nm,AD_MIME[ext]);if(u.error){ae(u.error.message||"فشل الرفع");return}
-    const rows=(await api.adhanList()).rows||[];
-    const e=await api.adhanAdd({name_ar:$("#adn").value.trim()||null,kind,url:u.url,sha256:sha,size_bytes:f.size,duration_s:d>0?d:null,license:$("#adl").value.trim()||null,active:true,sort:rows.length});
-    if(e){ae("تم رفع الملف لكن فشل الحفظ: "+(e.message||e));return}
-    toast("تم رفع الصوت");$("#adf").value="";$("#adn").value="";$("#adl").value="";load()}
-   catch(x){ae("حدث خطأ: "+(x.message||x))}finally{$("#adup").disabled=false;st.textContent=""}};
-  load()})();
  (()=>{const box=document.createElement("div");box.className="card";box.style.marginTop="16px";box.id="rollout";
   box.innerHTML='<h3>من حدّث ومن لم يحدّث</h3><div class="sub">حسب آخر إصدار منشور ('+esc(c.latest_name||"")+" · "+esc(c.latest_code)+')</div><div id="rob">'+skel(3)+"</div>";v.appendChild(box);
   (async()=>{const b=$("#rob");if(!b)return;let tgs=new Set();try{tgs=new Set((await api.targets()).map(t=>t.install_id))}catch(e){}
@@ -830,6 +788,49 @@ function mfaPrompt(){
    const v=await sb.auth.mfa.verify({factorId:t.id,challengeId:c.data.id,code:$("#mc").value.trim()});if(v.error)throw v.error;
    m.classList.add("hidden");boot()}
   catch(x){b.disabled=false;$("#mer").textContent="الرمز غير صحيح أو انتهت صلاحيته. جرّب رمزًا جديدًا.";$("#mer").classList.remove("hidden");$("#mc").select()}}}
+async function adhan(){const v=$("#view");v.innerHTML="";
+ {const box=document.createElement("div");box.className="card";box.id="adhancard";
+  box.innerHTML='<h3>أصوات الأذان</h3><div class="sub">ارفع صوت أذان جديد فيظهر في التطبيق بعد الأذانات المدمجة بأرقام 3 و4 و5 وهكذا، وكل مستخدم يختار الصوت الذي يريده. لا يحتاج إصدارًا جديدًا من التطبيق، لكن يظهر فقط للنسخ التي تدعم الميزة من 0.12.1 فما فوق. الحد الأقصى 4 ميجا للملف و20 صوتًا نشطًا.</div>'+
+   '<label>ملف الصوت (mp3 أو m4a أو aac أو ogg أو wav)</label><input id="adf" type="file" accept="audio/*,.mp3,.m4a,.aac,.ogg,.wav">'+
+   '<label>الاسم (اختياري)</label><input id="adn" maxlength="60" placeholder="اتركه فارغًا ليظهر «الأذان N» فقط">'+
+   '<label>النوع</label><div class="seg" id="adk"><button type="button" data-k="regular" class="on">للظهر والعصر والمغرب والعشاء</button><button type="button" data-k="fajr">أذان فجر</button></div>'+
+   '<label>المصدر أو الترخيص (اختياري)</label><input id="adl" maxlength="300" placeholder="ملاحظة لك فقط، لا تظهر للمستخدمين">'+
+   '<div id="aderr" class="err hidden"></div><div style="margin-top:12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap"><button class="btn" id="adup" type="button">رفع الصوت</button><span class="hint" id="adst"></span></div>'+
+   '<h3 style="font-size:var(--t3);margin-top:18px">الأصوات المرفوعة</h3><div id="adlist">'+skel(2)+'</div>';
+  v.appendChild(box);
+  const AD_MIME={mp3:"audio/mpeg",m4a:"audio/mp4",aac:"audio/aac",ogg:"audio/ogg",wav:"audio/wav"};
+  let kind="regular";const ae=m=>{const e=$("#aderr");e.textContent=m||"";e.classList.toggle("hidden",!m)};
+  document.querySelectorAll("#adk button").forEach(b=>b.onclick=()=>{kind=b.dataset.k;document.querySelectorAll("#adk button").forEach(x=>x.classList.toggle("on",x===b))});
+  const hex=buf=>[...new Uint8Array(buf)].map(x=>x.toString(16).padStart(2,"0")).join("");
+  const dur=f=>new Promise(res=>{const u=URL.createObjectURL(f),a=new Audio();let done=false;const fin=x=>{if(done)return;done=true;URL.revokeObjectURL(u);res(x)};
+    a.preload="metadata";a.onloadedmetadata=()=>fin(isFinite(a.duration)?Math.round(a.duration):0);a.onerror=()=>fin(-1);setTimeout(()=>fin(0),6000);a.src=u});
+  const load=async()=>{const b=$("#adlist");if(!b)return;let l;try{l=await api.adhanList()}catch(e){b.innerHTML='<div class="hint">تعذر تحميل القائمة</div>';return}
+   if(l.error){b.innerHTML='<div class="hint">تعذر تحميل القائمة: '+esc(l.error.message||"")+'</div>';return}
+   const rows=l.rows;if(!rows.length){b.innerHTML='<div class="hint">لا توجد أصوات مرفوعة بعد.</div>';return}
+   const cnt={regular:2,fajr:1};
+   b.innerHTML=rows.map((r,i)=>{const n=r.active?(++cnt[r.kind]):null;
+    return `<div class="item" style="padding:10px 12px;margin:8px 0;${r.active?"":"opacity:.55"}"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap"><span><b>${r.active?"الأذان "+n:"مخفي"}</b>${r.name_ar?" - "+esc(r.name_ar):""} <span class="hint">${r.kind==="fajr"?"فجر":"عادي"} · ${(r.size_bytes/1048576).toFixed(2)} ميجا${r.duration_s?" · "+r.duration_s+" ث":""}</span></span>
+     <span style="display:flex;gap:6px"><button class="btn ghost sm" data-m="up" data-i="${i}" ${i===0?"disabled":""} type="button">▲</button><button class="btn ghost sm" data-m="dn" data-i="${i}" ${i===rows.length-1?"disabled":""} type="button">▼</button><button class="btn ghost sm" data-m="tg" data-i="${i}" type="button">${r.active?"إخفاء":"إظهار"}</button><button class="btn ghost sm" data-m="rm" data-i="${i}" type="button">حذف</button></span></div>
+     <audio controls preload="none" src="${esc(r.url)}" style="width:100%;margin-top:8px"></audio>${r.license?`<div class="hint" style="margin-top:4px">المصدر: ${esc(r.license)}</div>`:""}</div>`}).join("");
+   b.querySelectorAll("[data-m]").forEach(btn=>btn.onclick=async()=>{const i=+btn.dataset.i,m=btn.dataset.m,r=rows[i];btn.disabled=true;let e=null;
+    if(m==="tg")e=await api.adhanUpdate(r.id,{active:!r.active});
+    else if(m==="rm"){if(!confirm("حذف هذا الصوت نهائيًا؟ سيختفي من التطبيقات عند التحديث التالي، ومن اختاره يرجع للأذان المدمج."))return load();e=await api.adhanDelete(r)}
+    else{const j=m==="up"?i-1:i+1;if(j<0||j>=rows.length)return load();e=await api.adhanUpdate(rows[i].id,{sort:j})||await api.adhanUpdate(rows[j].id,{sort:i});
+     for(let k=0;!e&&k<rows.length;k++)if(k!==i&&k!==j&&rows[k].sort!==k)e=await api.adhanUpdate(rows[k].id,{sort:k})}
+    if(e)toast("فشل: "+(e.message||e));load()})};
+  $("#adup").onclick=async()=>{ae("");const f=$("#adf").files[0];if(!f){ae("اختر ملف صوت");return}
+   const ext=(f.name.split(".").pop()||"").toLowerCase();if(!AD_MIME[ext]){ae("نوع الملف غير مدعوم. المسموح: mp3 و m4a و aac و ogg و wav");return}
+   if(f.size>4194304){ae("الملف أكبر من 4 ميجا ("+(f.size/1048576).toFixed(1)+" ميجا)");return}if(f.size<1000){ae("الملف صغير جدًا");return}
+   $("#adup").disabled=true;const st=$("#adst");st.textContent="جارٍ الفحص...";
+   try{const d=await dur(f);if(d<0&&!confirm("تعذر فحص الملف على هذا الجهاز (قد يكون غير صالح كصوت). هل ترفعه على أي حال؟")){return}if(d>360){ae("مدة الصوت أطول من 6 دقائق");return}
+    const sha=hex(await crypto.subtle.digest("SHA-256",await f.arrayBuffer()));const nm="a-"+Date.now().toString(36)+Math.random().toString(36).slice(2,7)+"."+ext;
+    st.textContent="جارٍ الرفع...";const u=await api.uploadAdhan(f,nm,AD_MIME[ext]);if(u.error){ae(u.error.message||"فشل الرفع");return}
+    const rows=(await api.adhanList()).rows||[];
+    const e=await api.adhanAdd({name_ar:$("#adn").value.trim()||null,kind,url:u.url,sha256:sha,size_bytes:f.size,duration_s:d>0?d:null,license:$("#adl").value.trim()||null,active:true,sort:rows.length});
+    if(e){ae("تم رفع الملف لكن فشل الحفظ: "+(e.message||e));return}
+    toast("تم رفع الصوت");$("#adf").value="";$("#adn").value="";$("#adl").value="";load()}
+   catch(x){ae("حدث خطأ: "+(x.message||x))}finally{$("#adup").disabled=false;st.textContent=""}};
+  load()}}
 async function security(){const v=$("#view");v.innerHTML=`<div class="card">${skel(5)}</div>`;
  if(DEMO){v.innerHTML=`<div class="card"><h3>التحقق بخطوتين</h3><p class="hint">غير متاح في العرض التجريبي.</p></div>`;return}
  let fs=[],lv={};try{fs=((await sb.auth.mfa.listFactors()).data||{}).totp||[];lv=await aal()}catch(e){}
