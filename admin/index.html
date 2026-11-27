@@ -286,6 +286,7 @@ if(DEMO){
    async devices({q,version,status,sort,asc,page,size}){let a=devs.filter(d=>(!q||(d.model+d.install_id).toLowerCase().includes(q.toLowerCase()))&&(!version||d.version_name===version)&&(!status||(status==="on"?state(d.last_seen,d.version_code)==="on":status==="d1"?["on","d1"].includes(state(d.last_seen,d.version_code)):status==="d7"?state(d.last_seen,d.version_code)!=="off":state(d.last_seen,d.version_code)==="off")));
     a.sort((x,y)=>(x[sort]>y[sort]?1:-1)*(asc?1:-1));return{rows:a.slice(page*size,page*size+size),total:a.length}},
    async config(){return{...cfg}},async saveConfig(c){cfg={...cfg,...c};return null},
+   async targets(){return(window.__tg=window.__tg||[]).slice()},async setTarget(r){window.__tg=(window.__tg||[]).filter(x=>x.install_id!==r.install_id);window.__tg.push({...r,created_at:new Date().toISOString()});return null},async delTarget(id){window.__tg=(window.__tg||[]).filter(x=>x.install_id!==id);return null},
    async messages(){return msgs.slice()},async addMessage(m){msgs.unshift({id:Date.now(),created_at:new Date().toISOString(),active:true,...m});return null},
    async setMessage(id,p){const m=msgs.find(x=>x.id===id);Object.assign(m,p);return null},async delMessage(id){msgs=msgs.filter(x=>x.id!==id);return null},
    async uploadApk(f,name){await new Promise(r=>setTimeout(r,900));return{url:"https://demo.supabase.co/storage/v1/object/public/noor-apk/"+name,error:null}},
@@ -303,6 +304,9 @@ if(DEMO){
     const r=await x.order(sort,{ascending:asc}).range(page*size,page*size+size-1);if(r.error)throw r.error;return{rows:r.data,total:r.count||0}},
    async config(){return ck(await sb.from("noor_config").select("*").eq("id",1).single())},
    async saveConfig(c){return (await sb.from("noor_config").update({...c,updated_at:new Date().toISOString()}).eq("id",1)).error},
+   async targets(){return ck(await sb.from("noor_target_update").select("*").order("created_at",{ascending:false}).limit(50))},
+   async setTarget(r){return (await sb.from("noor_target_update").upsert(r,{onConflict:"install_id"})).error},
+   async delTarget(id){return (await sb.from("noor_target_update").delete().eq("install_id",id)).error},
    async messages(){return ck(await sb.from("noor_messages").select("*").order("id",{ascending:false}).limit(100))},
    async addMessage(m){return (await sb.from("noor_messages").insert(m)).error},
    async setMessage(id,p){return (await sb.from("noor_messages").update(p).eq("id",id)).error},
@@ -430,6 +434,26 @@ async function update(){const v=$("#view");v.innerHTML=`<div class="card">${skel
  <div id="cerr" class="err hidden"></div><div style="margin-top:16px;display:flex;gap:10px;align-items:center"><button class="btn" id="sv">حفظ ونشر</button><span class="hint" id="cmsg"></span></div></div>
  <div class="card"><h3>معاينة ما يراه المستخدم</h3><div class="sub">نافذة التحديث داخل التطبيق</div><div id="pv"></div>
  <p class="hint" style="margin-top:16px">التحديث الإجباري: يظهر لكل من إصداره أقل من «أقل إصدار مسموح» ولا يمكن إغلاقه حتى يحمّل. استخدمه فقط عند وجود خلل خطير. المستخدم يثبّت الملف بنفسه وأندرويد يتحقق من التوقيع.</p></div></div>`;
+ (()=>{const box=document.createElement("div");box.className="card";box.style.marginTop="16px";box.id="target";
+  box.innerHTML='<h3>تحديث جهاز واحد فقط</h3><div class="sub">يستخدم نفس بيانات النموذج أعلاه (الإصدار، الرابط، البصمة، الملاحظة) لكنه يظهر لجهاز واحد فقط. لا يغيّر الإصدار المنشور للجميع. يظهر عند فتح التطبيق أو اتصاله التالي، وبشكل اختياري دائمًا.</div>'+
+   '<div class="toolbar"><input id="tq" placeholder="ابحث بالموديل أو رقم الجهاز"><button class="btn ghost sm" id="tgo" type="button">بحث</button></div><div id="tres"></div><div id="terr" class="err hidden"></div><div id="tlist" style="margin-top:14px"></div>';v.appendChild(box);
+  let pick=null;const terr=m=>{const e=$("#terr");e.textContent=m||"";e.classList.toggle("hidden",!m)};
+  const tmsg=e=>/noor_target_update|PGRST205|42P01/.test((e.code||"")+(e.message||""))?"الجدول غير موجود بعد: نفّذ ملف 010_target_update.sql في Supabase مرة واحدة":(e.message||String(e));
+  const drow=d=>`<div class="item" style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 12px;margin:6px 0"><div style="min-width:0"><div style="font-weight:700;overflow-wrap:anywhere">${esc(d.model||"?")}</div><div class="hint"><bdi class="mono">${esc(d.version_name||"?")} (${esc(d.version_code)})</bdi> · ${ago(d.last_seen)} · <bdi class="mono">${esc(String(d.install_id).slice(0,8))}</bdi></div></div><button class="btn sm" type="button" data-pick="${esc(d.install_id)}">اختيار</button></div>`;
+  const loadT=async()=>{const b=$("#tlist");if(!b)return;try{const l=await api.targets();b.innerHTML=l.length?'<h3 style="font-size:var(--t3)">التحديثات الموجّهة الحالية</h3>'+l.map(t=>`<div class="item" style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 12px;margin:6px 0"><div><bdi class="mono">${esc(t.install_id)}</bdi><div class="hint">${esc(t.latest_name||"")} (${esc(t.latest_code)}) · ${fdt(t.created_at)}</div></div><button class="btn ghost sm" type="button" data-del="${esc(t.install_id)}">إلغاء</button></div>`).join(""):'<p class="hint">لا توجد تحديثات موجّهة.</p>';
+    b.querySelectorAll("[data-del]").forEach(x=>x.onclick=async()=>{const e=await api.delTarget(x.dataset.del);if(e)terr(tmsg(e));else{toast("تم إلغاء التحديث الموجّه");loadT()}})}catch(e){b.innerHTML="";terr(tmsg(e))}};
+  const search=async()=>{terr("");const r=$("#tres");r.innerHTML=skel(2);try{const x=await api.devices({q:$("#tq").value.trim(),version:"",status:"",sort:"last_seen",asc:false,page:0,size:8});
+    r.innerHTML=x.rows.length?x.rows.map(drow).join(""):'<p class="hint">لا توجد نتائج.</p>';
+    r.querySelectorAll("[data-pick]").forEach(b=>b.onclick=()=>{const d=x.rows.find(z=>z.install_id===b.dataset.pick);pick=d;
+     r.innerHTML=drow(d).replace('data-pick','data-x').replace('>اختيار<',' hidden>اختيار<')+'<div style="margin-top:8px"><button class="btn" id="tsend" type="button">إرسال التحديث لهذا الجهاز فقط</button> <button class="btn ghost" id="tno" type="button">تغيير</button></div><p class="hint">لن يراه أي جهاز آخر.</p>';
+     $("#tno").onclick=search;$("#tsend").onclick=send})}catch(e){r.innerHTML=errBox(e)}};
+  const send=async()=>{terr("");const u=$("#url").value.trim(),sh=$("#sha").value.trim(),lc=+$("#lc").value||0;
+   const bad=!pick?"اختر جهازًا":!u||!/^https:\/\//.test(u)?"الرابط مطلوب ولازم يبدأ بـ https:// (ارفع الـ APK أعلاه أولًا)":!/^[0-9a-fA-F]{64}$/.test(sh)?"بصمة SHA-256 لازم تكون 64 حرفًا":lc<=0?"رقم الإصدار لازم يكون أكبر من صفر":lc<=+pick.version_code?"إصدار الجهاز ("+pick.version_code+") مساوٍ أو أحدث من الإصدار المُرسَل":lc<=+c.latest_code&&+pick.version_code<+c.latest_code?"هذا الإصدار ليس أحدث من المنشور للجميع، فلن يتغير شيء لهذا الجهاز":"";
+   if(bad){terr(bad);return}
+   if(!confirm("إرسال الإصدار "+($("#ln").value||lc)+" إلى هذا الجهاز فقط ("+(pick.model||"?")+")؟"))return;
+   $("#tsend").disabled=true;const e=await api.setTarget({install_id:pick.install_id,latest_code:lc,latest_name:$("#ln").value.trim(),apk_url:u,apk_sha256:sh,note_ar:$("#na").value,note_en:$("#ne").value});
+   if(e){terr("فشل الحفظ: "+tmsg(e));$("#tsend").disabled=false}else{toast("تم. سيظهر التحديث لهذا الجهاز فقط");$("#tres").innerHTML="";pick=null;loadT()}};
+  $("#tgo").onclick=search;$("#tq").onkeydown=e=>{if(e.key==="Enter")search()};search();loadT()})();
  const setKind=()=>{const f=(+$("#mc").value||0)>0;document.querySelectorAll("#kind button").forEach(b=>b.classList.toggle("on",(b.dataset.k==="force")===f));$("#kh").textContent=f?`إجباري لكل من إصداره أقل من ${$("#mc").value}`:"اختياري: يظهر مرة واحدة لكل مستخدم ويمكنه تأجيله.";$("#pv").innerHTML=prev(f)};
  const prev2=f=>`<div class="preview"><h4>إصدار جديد ${esc($("#ln").value||"")}</h4><p>${esc($("#na").value)||"يوجد إصدار أحدث من التطبيق."}</p><div class="acts">${f?"":"<span>لاحقًا</span>"}<span>تحميل</span></div></div>`;
  window.prev=prev2;
