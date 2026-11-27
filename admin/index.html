@@ -585,7 +585,7 @@ async function update(){const v=$("#view");v.innerHTML=`<div class="card">${skel
   else{st.innerHTML='<b style="color:var(--bad,#e57373)">تم نشر الإصدار لكن الإشعار لم يُرسل: '+esc(pmsg[r&&r.error]||(r&&(r.detail||r.error))||"خطأ غير معروف")+'</b> <button class="btn ghost sm" id="pre" type="button">إعادة إرسال الإشعار</button>';
    $("#pre").onclick=()=>sendPub(lcN)}};
  let ptEdited=false;const defTxt=()=>"إصدار جديد "+($("#ln").value.trim()||"")+" متاح، حدّث دلوقتي";
- $("#ptxt").value=defTxt();$("#ptxt").oninput=()=>{ptEdited=true};$("#ln").addEventListener("input",()=>{if(!ptEdited)$("#ptxt").value=defTxt()});
+ $("#ptxt").value=defTxt();$("#ptxt").oninput=()=>{ptEdited=!!$("#ptxt").value.trim()};$("#ln").addEventListener("input",()=>{if(!ptEdited)$("#ptxt").value=defTxt()});
  $("#pon").onchange=()=>{$("#pwrap").classList.toggle("hidden",!$("#pon").checked)};
  $("#sv").onclick=async()=>{const u=$("#url").value.trim(),sh=$("#sha").value.trim(),er=$("#cerr");er.classList.add("hidden");
   const bad=(u&&!/^https:\/\//.test(u))?"الرابط لازم يبدأ بـ https://":(u&&!/^[0-9a-fA-F]{64}$/.test(sh))?"بصمة SHA-256 لازم تكون 64 حرفًا":(u&&!(+$("#lc").value>0))?"رقم الإصدار (versionCode) لازم يكون أكبر من صفر، وإلا لن يظهر التحديث. ارفع الـ APK ليتعبّى تلقائيًا":(+$("#lc").value>0&&!u)?"أدخل رابط الـ APK":"";
